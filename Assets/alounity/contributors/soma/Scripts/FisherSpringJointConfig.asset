@@ -14,29 +14,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FisherSpringJointConfig
   idle:
     spring: 10
-    damper: 0.2
+    damper: 0.05
     minDistance: 0
-    maxDistance: 0
+    maxDistance: 1
     tolerance: 0.025
     enableCollision: 0
   waiting:
     spring: 10
     damper: 0.2
     minDistance: 0
-    maxDistance: 0
+    maxDistance: 15
     tolerance: 0.025
     enableCollision: 0
   catching:
     spring: 10
-    damper: 0.2
+    damper: 0.5
     minDistance: 0
-    maxDistance: 0
+    maxDistance: 15
     tolerance: 0.025
     enableCollision: 0
   swinging:
     spring: 10
-    damper: 0.2
+    damper: 0.8
     minDistance: 0
-    maxDistance: 0
+    maxDistance: 7
     tolerance: 0.025
-    enableCollision: 0
+    enableCollision: 1

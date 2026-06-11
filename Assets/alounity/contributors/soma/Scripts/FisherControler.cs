@@ -54,6 +54,9 @@ public class FisherControler : MonoBehaviour
         
     }
 
+    /// <summary>
+    /// 竿の回転を管理する。horizontalInputの値に応じて、rodMinRotation〜rodMaxRotationの範囲で回転させる.
+    /// </summary>
     void RotateRod()
     {
         if(!isDebugMode)
@@ -74,21 +77,39 @@ public class FisherControler : MonoBehaviour
         );
     }
 
+    /// <summary>
+    /// FisherStateを管理し、状態に応じたSpringJointのパラメータを適用する。
+    /// </summary>
+    /// <param name="newState"></param>
     void ManageState(FisherState newState)
     {
         currentState = newState;
         springJointConfig.Get(currentState).ApplyTo(hookSpringJoint);
     }
 
+    /// <summary>
+    /// Idle状態のときにキャストする処理。竿を前に振り、フックを飛ばす。
+    /// </summary>
+    /// <param name="context"></param>
     void Cast(InputAction.CallbackContext context)
     {
+        // Idle状態のときにしかキャストできないようにする
         if (currentState != FisherState.Idle) return;
+
+        // 前に投げる
         hookRigidbody.isKinematic = false;
         hookRigidbody.AddForce(Vector3.forward + castDirection, ForceMode.Impulse);
     }
 
+    /// <summary>
+    /// Catching状態のときにリールを巻く処理。一定回数巻いたらSwinging状態に移行する。
+    /// </summary>
+    /// <param name="context"></param>
     void Reel(InputAction.CallbackContext context)
     {
+        //　Catching時以外は動作しないようにする
+        if (currentState != FisherState.Catching) return;
+
         reelCount++;
         if (reelCount >= requiredReelShakeCount)
         {
