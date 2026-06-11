@@ -8,21 +8,21 @@
             "actions": [
                 {
                     "name": "BoatL",
-                    "type": "Button",
+                    "type": "Value",
                     "id": "29c24cfa-ce43-4446-9f90-576c86628e35",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": true
                 },
                 {
                     "name": "BoatR",
-                    "type": "Button",
+                    "type": "Value",
                     "id": "8cb97b2c-d249-4686-9a97-3f72437913eb",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -39,8 +39,30 @@
                 },
                 {
                     "name": "",
+                    "id": "ac37ab5e-267f-4c2d-af23-e1723ae24704",
+                    "path": "<Accelerometer>/acceleration",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "BoatL",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "c1ed217f-815f-4bca-9688-f4056b9f0c79",
                     "path": "<Keyboard>/i",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "BoatR",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a5a4b9ee-87cb-49c1-9af6-0fa868e11df7",
+                    "path": "<Accelerometer>/acceleration",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
