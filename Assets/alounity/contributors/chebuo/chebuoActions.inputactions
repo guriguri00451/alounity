@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "name": "chebuoActions",
+    "maps": [
+        {
+            "name": "Player",
+            "id": "fd90d89c-e076-4889-bee5-3593f7891317",
+            "actions": [
+                {
+                    "name": "BoatL",
+                    "type": "Button",
+                    "id": "29c24cfa-ce43-4446-9f90-576c86628e35",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "BoatR",
+                    "type": "Button",
+                    "id": "8cb97b2c-d249-4686-9a97-3f72437913eb",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "faa09442-0113-42b2-8018-925c1c226978",
+                    "path": "<Keyboard>/w",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "BoatL",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c1ed217f-815f-4bca-9688-f4056b9f0c79",
+                    "path": "<Keyboard>/i",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "BoatR",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
