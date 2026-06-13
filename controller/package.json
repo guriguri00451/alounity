@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "tsx server/index.ts",
+    "dev:https": "HTTPS=true LOCAL_IP=$(ifconfig | grep 'inet ' | grep -v 127.0.0.1 | head -1 | awk '{print $2}') tsx server/index.ts",
     "dev:next": "next dev",
     "build": "next build",
     "start": "tsx server/index.ts",
+    "setup:https": "bash scripts/setup-https.sh",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "format": "biome format --write .",

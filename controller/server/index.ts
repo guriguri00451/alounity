@@ -1,11 +1,25 @@
-import { createServer } from "node:http";
+import { existsSync, readFileSync } from "node:fs";
+import { createServer as createHttpServer } from "node:http";
+import { createServer as createHttpsServer } from "node:https";
+import { resolve } from "node:path";
 import { parse } from "node:url";
 import next from "next";
 import { Server } from "socket.io";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
-const port = 3000;
+const port = Number.parseInt(process.env.PORT || "3000", 10);
+
+// HTTPS設定
+const httpsEnabled = process.env.HTTPS === "true";
+const certDir = resolve(process.cwd(), "certs");
+const keyPath = resolve(certDir, "localhost+2-key.pem");
+const certPath = resolve(certDir, "localhost+2.pem");
+
+// 追加の証明書（IPアドレス用）
+const localIp = process.env.LOCAL_IP;
+const ipKeyPath = localIp ? resolve(certDir, `${localIp}-key.pem`) : null;
+const ipCertPath = localIp ? resolve(certDir, `${localIp}.pem`) : null;
 
 async function startServer() {
   const app = next({ dev, hostname, port });
@@ -13,10 +27,36 @@ async function startServer() {
 
   await app.prepare();
 
-  const server = createServer((req, res) => {
-    const parsedUrl = parse(req.url!, true);
-    handle(req, res, parsedUrl);
-  });
+  let server: ReturnType<typeof createHttpServer>;
+
+  if (httpsEnabled) {
+    // HTTPSサーバー
+    if (!existsSync(keyPath) || !existsSync(certPath)) {
+      console.error("Error: HTTPS certificates not found.");
+      console.error("Please run: npm run setup:https");
+      process.exit(1);
+    }
+
+    const httpsOptions = {
+      key: readFileSync(ipKeyPath && existsSync(ipKeyPath) ? ipKeyPath : keyPath),
+      cert: readFileSync(ipCertPath && existsSync(ipCertPath) ? ipCertPath : certPath),
+    };
+
+    server = createHttpsServer(httpsOptions, (req, res) => {
+      const parsedUrl = parse(req.url!, true);
+      handle(req, res, parsedUrl);
+    });
+
+    console.log(`> HTTPS enabled`);
+  } else {
+    // HTTPサーバー
+    server = createHttpServer((req, res) => {
+      const parsedUrl = parse(req.url!, true);
+      handle(req, res, parsedUrl);
+    });
+
+    console.log(`> HTTP mode (set HTTPS=true for HTTPS)`);
+  }
 
   // Socket.IOサーバーの初期化
   const io = new Server(server, {
@@ -59,9 +99,13 @@ async function startServer() {
     });
   });
 
+  const protocol = httpsEnabled ? "https" : "http";
   server.listen(port, () => {
-    console.log(`> Ready on http://${hostname}:${port}`);
+    console.log(`> Ready on ${protocol}://${hostname}:${port}`);
     console.log(`> Socket.IO server is running`);
+    if (localIp) {
+      console.log(`> Access from mobile: ${protocol}://${localIp}:${port}`);
+    }
   });
 }
 
