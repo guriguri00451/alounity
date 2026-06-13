@@ -63,6 +63,7 @@ alounity/
 | センサー API | Device Orientation Events（`DeviceMotionEvent` / `DeviceOrientationEvent`） | - |
 | HTTPS | mkcert（ローカル開発用） | - |
 | 言語 | TypeScript | - |
+| Unity Socket.IO | SocketIoClientDotNet | 最新安定版 |
 
 ## 通信アーキテクチャ
 
@@ -162,6 +163,55 @@ Unity
 - 接続時にプレイヤーIDを割り当て（UUID）
 - ルーム概念: 同一ルーム内のプレイヤーのセンサーデータをUnityに転送
 
+#### 3-4. Unity側Socket.IOクライアント実装
+
+**技術選定:** SocketIoClientDotNet（C#製Socket.IOクライアント）
+
+**選定理由:**
+- Socket.IOプロトコル完全対応（自前実装不要）
+- イベントベースのAPIで直感的
+- ルーム機能対応
+- 自動再接続機能
+
+**実装内容:**
+- Socket.IOサーバーへの接続
+- `sensor:data`イベントの受信
+- 受信したセンサーデータをゲームオブジェクトに適用
+- 再接続ロジック
+
+**作成ファイル:**
+```
+Assets/alounity/
+└── Scripts/
+    └── Network/
+        ├── SocketIOManager.cs      # Socket.IO接続管理（Singleton）
+        └── SensorDataReceiver.cs   # センサーデータ受信・適用
+```
+
+**SocketIoClientDotNetの導入方法:**
+1. NuGetパッケージマネージャーで`SocketIoClientDotNet`をインストール
+2. または、DLLを直接`Assets/Plugins/`に配置
+
+**使用例:**
+```csharp
+using Quobject.SocketIoClientDotNet.Client;
+
+var socket = IO.Socket("http://localhost:3000");
+socket.On(Socket.EVENT_CONNECT, () => {
+    Debug.Log("Connected to server");
+    socket.Emit("unity:connect", new { roomId = "room1" });
+});
+socket.On("sensor:data", (data) => {
+    Debug.Log($"Received sensor data: {data}");
+    // センサーデータをゲームロジックに適用
+});
+```
+
+**websocket-sharpが非推奨の理由:**
+- Socket.IOプロトコル未対応
+- エンジンIOのハンドシェイク、パケットフォーマット、再接続ロジックなどを自前実装が必要
+- 開発工数が大幅に増加
+
 ### Phase 4: 動作確認・最適化
 
 #### 4-1. スマホからのアクセス確認
@@ -176,10 +226,10 @@ Unity
 - バイナリ送信の検討（Socket.IOはバイナリ対応済み）
 - 圧縮オプション有効化
 
-#### 4-3. Unity側接続（次回以降）
+#### 4-3. Unity側接続
 
-- UnityからSocket.IOクライアントとして接続（`SocketIoClientDotNet`や`NativeWebSocket`等）
-- サーバーから受信したセンサーデータをUnity側で処理
+- Phase 3の3-4で実装済み
+- SocketIoClientDotNetを使用してサーバーから受信したセンサーデータをUnity側で処理
 
 ## 最初の実装マイルストーン
 
