@@ -68,24 +68,39 @@ async function startServer() {
 
     // コントローラー接続イベント
     socket.on("controller:connect", (data) => {
+      if (!data || typeof data !== "object") {
+        socket.emit("server:ack", { received: false, error: "Invalid data" });
+        return;
+      }
+      const roomId = typeof data.roomId === "string" ? data.roomId : "default";
       console.log(`[Socket.IO] Controller connected:`, data);
-      socket.join(`room:${data.roomId || "default"}`);
+      socket.join(`room:${roomId}`);
       socket.emit("server:ack", { received: true, playerId: socket.id });
     });
 
     // センサーデータ受信イベント
     socket.on("controller:sensor", (data) => {
-      // 同じルーム内のUnityクライアントに転送
-      io.to(`room:${data.roomId || "default"}`).emit("sensor:data", {
+      if (!data || typeof data !== "object") return;
+      const roomId = typeof data.roomId === "string" ? data.roomId : "default";
+      // バリデーション済みのフィールドのみ転送
+      const payload = {
         playerId: socket.id,
-        ...data,
-      });
+        role: typeof data.role === "string" ? data.role : "unknown",
+        accel: data.accel && typeof data.accel === "object" ? data.accel : null,
+        rotation: data.rotation && typeof data.rotation === "object" ? data.rotation : null,
+        orientation:
+          data.orientation && typeof data.orientation === "object" ? data.orientation : null,
+        timestamp: typeof data.timestamp === "number" ? data.timestamp : Date.now(),
+      };
+      io.to(`room:${roomId}`).emit("sensor:data", payload);
     });
 
     // Unity接続イベント
     socket.on("unity:connect", (data) => {
+      if (!data || typeof data !== "object") return;
+      const roomId = typeof data.roomId === "string" ? data.roomId : "default";
       console.log(`[Socket.IO] Unity connected:`, data);
-      socket.join(`room:${data.roomId || "default"}`);
+      socket.join(`room:${roomId}`);
     });
 
     // 切断イベント

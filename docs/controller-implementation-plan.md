@@ -172,6 +172,11 @@ Unity
 
 **技術選定:** SocketIoClientDotNet（C#製Socket.IOクライアント）
 
+**NuGetパッケージ情報:**
+- パッケージID: `SocketIoClientDotNet`
+- 推奨バージョン: `1.0.8`（最新安定版）
+- 依存関係: `WebSocket4Net`, `EngineIoClientDotNet`, `Newtonsoft.Json`
+
 **選定理由:**
 - Socket.IOプロトコル完全対応（自前実装不要）
 - イベントベースのAPIで直感的
@@ -184,18 +189,23 @@ Unity
 - 受信したセンサーデータをゲームオブジェクトに適用
 - 再接続ロジック
 
-**作成ファイル:**
+**作成ファイル（TBD - 未作成）:**
 ```
 Assets/alounity/
 └── Scripts/
     └── Network/
-        ├── SocketIOManager.cs      # Socket.IO接続管理（Singleton）
-        └── SensorDataReceiver.cs   # センサーデータ受信・適用
+        ├── SocketIOManager.cs      # Socket.IO接続管理（Singleton）- TBD
+        └── SensorDataReceiver.cs   # センサーデータ受信・適用 - TBD
 ```
+
+**注記:** 上記ファイルは現在リポジトリに存在しません。実装時に作成してください。
+- `SocketIOManager.cs`: SingletonパターンでSocket.IO接続を管理、再接続処理を実装
+- `SensorDataReceiver.cs`: `sensor:data`イベントをリッスンし、受信データをゲームロジックに適用
 
 **SocketIoClientDotNetの導入方法:**
 1. NuGetパッケージマネージャーで`SocketIoClientDotNet`をインストール
 2. または、DLLを直接`Assets/Plugins/`に配置
+3. Unity Package Manager (UPM) での導入は公式サポート外（サードパーティラッパーが必要）
 
 **使用例:**
 ```csharp
