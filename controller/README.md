@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# スマホコントローラーアプリ
 
-## Getting Started
+Unityゲーム用のスマホコントローラーアプリケーション。スマホのセンサーデータ（加速度・ジャイロ）をSocket.IOでUnityに送信する。
 
-First, run the development server:
+## 技術スタック
+
+- **フレームワーク**: Next.js 16 (App Router)
+- **言語**: TypeScript
+- **リアルタイム通信**: Socket.IO
+- **センサーAPI**: DeviceMotionEvent / DeviceOrientationEvent
+- **スタイリング**: Tailwind CSS
+
+## 前提条件
+
+- Node.js 18.x 以上
+- npm 9.x 以上
+
+## セットアップ
+
+### 1. 依存パッケージのインストール
+
+```bash
+cd controller
+npm install
+```
+
+### 2. 開発サーバーの起動
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+開発サーバーが起動したら、[http://localhost:3000](http://localhost:3000) をブラウザで開きます。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. スマホからのアクセス（開発時）
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+PCとスマホを同じWi-Fiネットワークに接続し、スマホのブラウザで `http://<PCのIPアドレス>:3000` にアクセスします。
 
-## Learn More
+**注意**: センサーAPI（DeviceMotion/DeviceOrientation）を使用するにはHTTPSが必要です。本番環境またはHTTPS対応の開発環境では、mkcert等を使用してローカルHTTPS証明書を設定してください。
 
-To learn more about Next.js, take a look at the following resources:
+## プロジェクト構造
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+controller/
+├── src/
+│   ├── app/           # ページ（App Router）
+│   ├── components/    # UIコンポーネント
+│   ├── hooks/         # カスタムフック（センサーデータ取得等）
+│   └── lib/           # ユーティリティ
+├── server/            # カスタムサーバー（Socket.IO統合用）
+└── public/            # 静的ファイル
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 利用可能なスクリプト
 
-## Deploy on Vercel
+| コマンド | 説明 |
+|---------|------|
+| `npm run dev` | 開発サーバーを起動 |
+| `npm run build` | プロダクションビルド |
+| `npm run start` | プロダクションサーバーを起動 |
+| `npm run lint` | ESLintでコードチェック |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 開発上の注意
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### AIエージェント設定ファイル
+
+このプロジェクトでは、AIエージェント用の設定ファイルはgitignoreされています：
+
+- `CLAUDE.md`
+- `.cursor/`
+- `.cursorrules`
+- `.github/copilot-instructions.md`
+- `.windsurfrules`
+- `.opencode/`
+- `.claude/`
+- `opencode.json`
+
+各AIエージェントの設定については、リポジトリルートの `docs/ai-agent-setup-guide.md` を参照してください。
+
+## トラブルシューティング
+
+### センサーデータが取得できない
+
+- **iOS**: iOS 13以降では、HTTPS環境で `DeviceMotionEvent.requestPermission()` によるユーザー許可が必要です
+- **Android**: Chrome等のモダンブラウザでサポートされています
+- **開発環境**: localhostではHTTPでも動作しますが、センサーAPIはHTTPSが必須です
+
+### Socket.IO接続エラー
+
+- ファイアウォールでポート3000がブロックされていないか確認
+- PCとスマホが同じネットワークに接続されているか確認
+
+## 関連ドキュメント
+
+- [実装計画](../docs/controller-implementation-plan.md)
+- [開発ルール](../AGENTS.md)
+- [AIエージェント設定ガイド](../docs/ai-agent-setup-guide.md)

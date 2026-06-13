@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI Agent configuration files
+CLAUDE.md
+CLAUDE.local.md
+.cursor/
+.cursorrules
+.github/copilot-instructions.md
+.windsurfrules
+.opencode/
+.claude/
+.agents/
+opencode.json
+
+# mkcert certificates
+certs/
