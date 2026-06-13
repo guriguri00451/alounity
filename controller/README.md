@@ -27,6 +27,8 @@ Unityゲーム用のスマホコントローラーアプリケーション。ス
 - **リアルタイム通信**: Socket.IO
 - **センサーAPI**: DeviceMotionEvent / DeviceOrientationEvent
 - **スタイリング**: Tailwind CSS
+- **Lint/Format**: Biome
+- **テスト**: Vitest + React Testing Library
 
 ## 前提条件
 
@@ -76,7 +78,23 @@ controller/
 | `npm run dev` | 開発サーバーを起動 |
 | `npm run build` | プロダクションビルド |
 | `npm run start` | プロダクションサーバーを起動 |
-| `npm run lint` | ESLintでコードチェック |
+| `npm run check` | Biome (lint + format) チェック |
+| `npm run check:fix` | Biome 自動修正 |
+| `npm run typecheck` | TypeScript型チェック |
+| `npm run test` | Vitestテスト実行（watchモード） |
+| `npm run test:run` | Vitestテスト実行（1回のみ） |
+| `npm run test:coverage` | テストカバレッジ取得 |
+
+## CI（GitHub Actions）
+
+`controller/` ディレクトリに変更がある場合、PR/Push時に自動で以下を実行：
+
+1. **Biome check** - lint + format
+2. **TypeScript** - 型チェック
+3. **Vitest** - テスト実行
+4. **Build** - ビルド確認
+
+ワークフローファイル: `.github/workflows/ci-controller.yml`
 
 ## 開発上の注意
 

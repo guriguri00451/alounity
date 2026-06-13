@@ -3,8 +3,16 @@
 ## 基本構成
 
 - `controller/` ディレクトリ配下に配置
-- Next.js 15 + App Router（Pages Router禁止）
+- Next.js 16 + App Router（Pages Router禁止）
 - React 19 + TypeScript strict mode
+
+## 開発ツール
+
+| ツール | 用途 |
+|--------|------|
+| Biome | Lint + Format |
+| Vitest | テスト |
+| React Testing Library | コンポーネントテスト |
 
 ## カスタムサーバー
 
@@ -26,7 +34,8 @@ src/
 ├── app/              # ページ（App Router）
 ├── components/       # UIコンポーネント
 ├── hooks/           # カスタムフック
-└── lib/             # ユーティリティ
+├── lib/             # ユーティリティ
+└── __tests__/       # テストファイル
 ```
 
 ## 注意事項
