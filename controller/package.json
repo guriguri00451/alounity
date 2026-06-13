@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "tsx server/index.ts",
+    "dev:next": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "tsx server/index.ts",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "format": "biome format --write .",
@@ -36,6 +37,7 @@
     "@vitest/coverage-v8": "^4.1.8",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5",
     "vitest": "^4.1.8"
   }
