@@ -44,7 +44,9 @@ alounity/
 │   │   └── lib/
 │   │       └── socket-client.ts     # Socket.IOクライアント
 │   ├── server/
-│   │   └── index.ts           # カスタムサーバー（Socket.IO統合）
+│   │   └── index.ts           # カスタムサーバー（Socket.IO統合、HTTPS対応）
+│   ├── scripts/
+│   │   └── setup-https.sh     # HTTPS証明書生成スクリプト
 │   ├── public/
 │   ├── package.json
 │   ├── tsconfig.json
@@ -105,19 +107,22 @@ Unity
 - TypeScript, App Router, Tailwind CSS
 - 依存関係追加: `socket.io`, `socket.io-client`
 
-#### 1-2. カスタムサーバー構成
+#### 1-2. カスタムサーバー構成 ✅ 完了
 
 - Socket.IOをNext.jsと統合するため、カスタムサーバー（`server/index.ts`）を作成
 - Next.jsのデフォルトサーバーではSocket.IOのWebSocket接続を扱えないため、`next` + `http.Server` + `socket.io` を組み合わせたカスタムサーバーを使用
-- ポート: 3000（HTTPS）
+- ポート: 3000
+- Socket.IOイベント: `controller:connect`, `controller:sensor`, `sensor:data`, `unity:connect`
+- ルーム機能: `roomId`ベースのルーム管理
 
-#### 1-3. HTTPS環境構築（mkcert）
+#### 1-3. HTTPS環境構築（mkcert） ✅ 完了
 
-- `mkcert`をHomebrewでインストール
-- ローカルCAを作成
-- `localhost` と `*.local`（スマホからのアクセス用）の証明書を作成
-- `certs/` ディレクトリに保存（`.gitignore`に追加）
-- Next.jsカスタムサーバーでHTTPS化
+- `scripts/setup-https.sh` で証明書生成スクリプトを作成
+- カスタムサーバーでHTTPS対応を実装（`HTTPS=true`環境変数でHTTPSモード起動）
+- `npm run setup:https` でmkcertを使用した証明書生成
+- `npm run dev:https` でHTTPSサーバーを起動
+- `certs/` ディレクトリに証明書を保存（`.gitignore`に追加済み）
+- localhost、127.0.0.1、ローカルIPアドレス用の証明書を生成
 
 ### Phase 2: センサーデータ取得
 
