@@ -1,0 +1,32 @@
+language: japanese
+
+reviews:
+  auto_review:
+    enabled: false
+    auto: false
+    drafts: false
+  on_demand: true
+
+summary:
+  enabled: true
+  language: japanese
+
+comments:
+  issue: true
+  pr_summary: true
+
+path_instructions:
+  - path: "controller/**"
+    instructions: |
+      このディレクトリはNext.jsアプリケーションです。
+      - App Routerを使用しています
+      - TypeScript strict modeで動作しています
+      - センサーAPI（DeviceMotionEvent/DeviceOrientationEvent）を使用します
+      - Socket.IOでリアルタイム通信を行います
+  - path: "Assets/**"
+    instructions: |
+      このディレクトリはUnityプロジェクトです。
+      - Unity 6 (6000.3.17f1) を使用しています
+      - URP (Universal Render Pipeline) が適用されています
+      - C#の命名規則に従ってください（PascalCase, camelCase）
+      - public変数の代わりにプロパティを使用してください
