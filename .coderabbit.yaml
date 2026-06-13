@@ -1,4 +1,4 @@
-language: japanese
+language: ja
 
 reviews:
   auto_review:
@@ -9,7 +9,7 @@ reviews:
 
 summary:
   enabled: true
-  language: japanese
+  language: ja
 
 comments:
   issue: true
