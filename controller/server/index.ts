@@ -7,7 +7,7 @@ import next from "next";
 import { Server } from "socket.io";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
+const hostname = "0.0.0.0"; // すべてのネットワークインターフェースでリッスン
 const port = Number.parseInt(process.env.PORT || "3000", 10);
 
 // HTTPS設定
@@ -100,7 +100,7 @@ async function startServer() {
   });
 
   const protocol = httpsEnabled ? "https" : "http";
-  server.listen(port, () => {
+  server.listen(port, hostname, () => {
     console.log(`> Ready on ${protocol}://${hostname}:${port}`);
     console.log(`> Socket.IO server is running`);
     if (localIp) {
