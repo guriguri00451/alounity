@@ -4,6 +4,24 @@
 
 Unityゲームのコントローラーとしてスマホを活用する。スマホのジャイロセンサー・加速度センサーの値をsocket.ioで通信し、Unity側に送信する。
 
+## 役割別センサーマッピング
+
+| 役割 | 使用センサー | 検出する動作 | Unity側での用途 |
+|------|-------------|-------------|----------------|
+| 右オール | DeviceMotionEvent (acceleration) | スマホを振る動作 | カヤック右側の推進力 |
+| 左オール | DeviceMotionEvent (acceleration) | スマホを振る動作 | カヤック左側の推進力 |
+| 釣り | DeviceOrientationEvent + DeviceMotionEvent | 方位角＋振りかぶり＋キャスト＋引き上げ | 釣り針の方向制御、キャスト、リール |
+
+## 釣りアクションのステートマシン
+
+```
+Idle → Waiting（キャスト入力：振りかぶり検出）
+     → Catching（キャスト実行：前に投げる）
+     → Swinging（魚ヒット：魚を振り回す）
+     → Idle（攻撃完了 / 魚を手放す）
+```
+
+
 ## ディレクトリ構成
 
 ```
@@ -38,13 +56,13 @@ alounity/
 
 ## 技術スタック
 
-| 層 | 技術 |
-|---|---|
-| フロントエンド | Next.js 15 (App Router), React 19 |
-| リアルタイム通信 | Socket.IO (client: `socket.io-client`, server: `socket.io`) |
-| センサー API | Device Orientation Events（`DeviceMotionEvent` / `DeviceOrientationEvent`） |
-| HTTPS | mkcert（ローカル開発用） |
-| 言語 | TypeScript |
+| 層 | 技術 | バージョン |
+|---|---|---|
+| フロントエンド | Next.js (App Router), React 19 | 16.2.9 |
+| リアルタイム通信 | Socket.IO (client: `socket.io-client`, server: `socket.io`) | 4.8.3 |
+| センサー API | Device Orientation Events（`DeviceMotionEvent` / `DeviceOrientationEvent`） | - |
+| HTTPS | mkcert（ローカル開発用） | - |
+| 言語 | TypeScript | - |
 
 ## 通信アーキテクチャ
 

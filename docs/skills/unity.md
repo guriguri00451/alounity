@@ -30,6 +30,25 @@ Assets/
 - Unity側はSocket.IOクライアントとして接続
 - ライブラリ候補: `SocketIoClientDotNet` または `NativeWebSocket`
 - サーバーから受信したセンサーデータをゲームロジックで使用
+- 通信方向: スマホ→Unityの**一方向**のみ
+
+## 主要クラス一覧
+
+| クラス名 | パス | 役割 |
+|---------|------|------|
+| `FisherController` | `contributors/soma/Scripts/` | 釣り人の状態管理・入力処理（Idle → Waiting → Catching → Swinging） |
+| `HookMover` | `contributors/soma/Scripts/` | 釣り針の物理演算・浮力・水中抵抗制御 |
+| `BoatController` | `contributors/chebuo/Scripts/` | カヤック移動（WheelCollider ベース） |
+| `CameraController` | `contributors/chebuo/Scripts/` | ボート追従カメラ（SmoothDamp） |
+| `GameManager` | `Scripts/`（新規予定） | Singleton。ゲーム状態管理・チーム管理 |
+
+## スマホ入力のマッピング
+
+| 役割 | 受信データ | マッピング先 |
+|------|-----------|-------------|
+| 右オール | `accel` | `BoatController` の右側推進力 |
+| 左オール | `accel` | `BoatController` の左側推進力 |
+| 釣り | `orientation` + `accel` + `rotation` | `FisherController` のステート遷移 |
 
 ## コーディング規約
 
