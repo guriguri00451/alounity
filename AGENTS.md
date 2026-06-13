@@ -70,12 +70,30 @@ Unityゲーム + スマホコントローラー。複数プレイヤーがスマ
 
 **Unity:** Unity Editor (バージョン 6000.3.17f1) を使用
 
-**コントローラー（計画中）:**
+**コントローラー:**
 ```bash
 cd controller
 npm install
-npm run dev        # Socket.IO付きNext.js開発サーバーを起動
+npm run dev        # Next.js開発サーバーを起動
+
+# CI関連コマンド
+npm run check      # Biome (lint + format) チェック
+npm run check:fix  # Biome 自動修正
+npm run typecheck  # TypeScript型チェック
+npm run test:run   # Vitestテスト実行
+npm run build      # プロダクションビルド
 ```
+
+## CI（GitHub Actions）
+
+`controller/` ディレクトリに変更がある場合、PR/Push時に自動で以下を実行：
+
+1. **Biome check** - lint + format
+2. **TypeScript** - 型チェック
+3. **Vitest** - テスト実行
+4. **Build** - ビルド確認
+
+ワークフローファイル: `.github/workflows/ci-controller.yml`
 
 ## 注意事項
 
