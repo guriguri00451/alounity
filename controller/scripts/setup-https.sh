@@ -1,6 +1,6 @@
 #!/bin/bash
 # ローカルHTTPS証明書生成スクリプト
-# mkcertを使用してlocalhostと*.localの証明書を生成します
+# mkcertを使用してlocalhostとローカルIPの証明書を生成します
 
 set -e
 
@@ -19,7 +19,7 @@ if ! command -v mkcert &> /dev/null; then
     echo "以下のコマンドでmkcertをインストールしてください："
     echo "  macOS: brew install mkcert && mkcert -install"
     echo "  Linux: sudo apt install mkcert || sudo yum install mkcert"
-    echo "  Windows: choco install mkcert || scoop install mkcert"
+    echo "  Windows: choco install mkcert && mkcert -install"
     echo ""
     echo "詳細: https://github.com/FiloSottile/mkcert"
     exit 1
@@ -27,11 +27,8 @@ fi
 
 echo -e "${GREEN}✓ mkcertが見つかりました${NC}"
 
-# ローカルCAがインストールされているか確認
-if ! mkcert -install 2>&1 | grep -q "created"; then
-    echo -e "${YELLOW}警告: ローカルCAが既にインストールされている可能性があります${NC}"
-fi
-
+# ローカルCAをインストール
+mkcert -install
 echo -e "${GREEN}✓ ローカルCAがインストールされました${NC}"
 
 # 証明書ディレクトリを作成
@@ -40,38 +37,38 @@ mkdir -p "$CERT_DIR"
 
 echo -e "${GREEN}✓ 証明書ディレクトリを作成しました: $CERT_DIR${NC}"
 
-# 証明書を生成
-echo "証明書を生成中..."
-cd "$CERT_DIR"
-
-# localhostと*.localの証明書を生成
-mkcert localhost 127.0.0.1 ::1
-
-# *.localの証明書を生成（スマホからのアクセス用）
-# 実際のIPアドレスを取得して証明書に含める
+# ローカルIPアドレスを取得
 LOCAL_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $2}')
+
+# 既存の証明書を削除
+rm -f "$CERT_DIR"/*.pem
+
+# 証明書を生成（すべてのドメインを1つの証明書に）
+echo "証明書を生成中..."
+
 if [ -n "$LOCAL_IP" ]; then
     echo -e "${GREEN}ローカルIPアドレスを検出: $LOCAL_IP${NC}"
-    mkcert "$LOCAL_IP" "*.local"
+    cd "$CERT_DIR"
+    mkcert -cert-file server.pem -key-file server-key.pem localhost 127.0.0.1 ::1 "$LOCAL_IP"
+    cd ..
 else
     echo -e "${YELLOW}警告: ローカルIPアドレスを検出できませんでした${NC}"
-    echo "*.localの証明書のみを生成します"
-    mkcert "*.local"
+    cd "$CERT_DIR"
+    mkcert -cert-file server.pem -key-file server-key.pem localhost 127.0.0.1 ::1
+    cd ..
 fi
-
-cd ..
 
 echo ""
 echo -e "${GREEN}=== 証明書生成完了 ===${NC}"
 echo ""
 echo "生成された証明書:"
-ls -la "$CERT_DIR"/*.pem 2>/dev/null || ls -la "$CERT_DIR"/*.crt 2>/dev/null || echo "証明書が見つかりません"
+ls -la "$CERT_DIR"/*.pem 2>/dev/null || echo "証明書が見つかりません"
 echo ""
 echo -e "${GREEN}次のステップ:${NC}"
-echo "1. カスタムサーバーを起動: npm run dev"
+echo "1. HTTPSサーバーを起動: npm run dev:https"
 echo "2. ブラウザで https://localhost:3000 にアクセス"
 echo "3. スマホからアクセス: https://<PCのIPアドレス>:3000"
 echo ""
 echo -e "${YELLOW}注意:${NC}"
 echo "- スマホからアクセスする場合は、同じWi-Fiネットワークに接続してください"
-echo "- 証明書の警告が表示された場合は、ブラウザの設定で証明書を信頼してください"
+echo "- iOSの場合、設定 > 一般 > 情報 > 証明書信頼設定 で証明書を信頼してください"

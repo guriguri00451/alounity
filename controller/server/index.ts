@@ -13,13 +13,8 @@ const port = Number.parseInt(process.env.PORT || "3000", 10);
 // HTTPS設定
 const httpsEnabled = process.env.HTTPS === "true";
 const certDir = resolve(process.cwd(), "certs");
-const keyPath = resolve(certDir, "localhost+2-key.pem");
-const certPath = resolve(certDir, "localhost+2.pem");
-
-// 追加の証明書（IPアドレス用）
-const localIp = process.env.LOCAL_IP;
-const ipKeyPath = localIp ? resolve(certDir, `${localIp}-key.pem`) : null;
-const ipCertPath = localIp ? resolve(certDir, `${localIp}.pem`) : null;
+const keyPath = resolve(certDir, "server-key.pem");
+const certPath = resolve(certDir, "server.pem");
 
 async function startServer() {
   const app = next({ dev, hostname, port });
@@ -38,8 +33,8 @@ async function startServer() {
     }
 
     const httpsOptions = {
-      key: readFileSync(ipKeyPath && existsSync(ipKeyPath) ? ipKeyPath : keyPath),
-      cert: readFileSync(ipCertPath && existsSync(ipCertPath) ? ipCertPath : certPath),
+      key: readFileSync(keyPath),
+      cert: readFileSync(certPath),
     };
 
     server = createHttpsServer(httpsOptions, (req, res) => {
@@ -100,6 +95,7 @@ async function startServer() {
   });
 
   const protocol = httpsEnabled ? "https" : "http";
+  const localIp = process.env.LOCAL_IP;
   server.listen(port, hostname, () => {
     console.log(`> Ready on ${protocol}://${hostname}:${port}`);
     console.log(`> Socket.IO server is running`);
