@@ -67,17 +67,41 @@ controller/
 │   ├── components/    # UIコンポーネント
 │   ├── hooks/         # カスタムフック（センサーデータ取得等）
 │   └── lib/           # ユーティリティ
-├── server/            # カスタムサーバー（Socket.IO統合用）
+├── server/
+│   └── index.ts       # カスタムサーバー（Next.js + Socket.IO統合）
 └── public/            # 静的ファイル
 ```
+
+## カスタムサーバーについて
+
+Next.jsのデフォルトサーバーはWebSocket接続をサポートしていないため、Socket.IOを使用するためにカスタムサーバーを実装しています。
+
+- **ファイル**: `server/index.ts`
+- **起動方法**: `npm run dev`（カスタムサーバー経由でNext.jsを起動）
+- **ポート**: 3000
+- **Socket.IO**: WebSocket + Polling対応
+
+### Socket.IOイベント
+
+| イベント | 方向 | 説明 |
+|---------|------|------|
+| `controller:connect` | スマホ → サーバー | コントローラー接続 |
+| `controller:sensor` | スマホ → サーバー | センサーデータ送信 |
+| `sensor:data` | サーバー → Unity | センサーデータ転送 |
+| `unity:connect` | Unity → サーバー | Unity接続 |
+
+### ルーム機能
+
+同じルーム内のクライアント間でセンサーデータを転送します。`controller:connect`または`unity:connect`イベントで`roomId`を指定することで、同じルームに参加できます。
 
 ## 利用可能なスクリプト
 
 | コマンド | 説明 |
 |---------|------|
-| `npm run dev` | 開発サーバーを起動 |
+| `npm run dev` | 開発サーバーを起動（カスタムサーバー経由） |
+| `npm run dev:next` | Next.js開発サーバーを直接起動（Socket.IOなし） |
 | `npm run build` | プロダクションビルド |
-| `npm run start` | プロダクションサーバーを起動 |
+| `npm run start` | プロダクションサーバーを起動（カスタムサーバー経由） |
 | `npm run check` | Biome (lint + format) チェック |
 | `npm run check:fix` | Biome 自動修正 |
 | `npm run typecheck` | TypeScript型チェック |
