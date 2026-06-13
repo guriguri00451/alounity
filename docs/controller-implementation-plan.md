@@ -190,7 +190,7 @@ Unity
 - 再接続ロジック
 
 **作成ファイル（TBD - 未作成）:**
-```
+```text
 Assets/alounity/
 └── Scripts/
     └── Network/

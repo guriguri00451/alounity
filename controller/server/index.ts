@@ -78,10 +78,17 @@ async function startServer() {
       socket.emit("server:ack", { received: true, playerId: socket.id });
     });
 
-    // センサーデータ受信イベント
+    // センサーデータ受信イベント（30fpsスロットリング）
     socket.on("controller:sensor", (data) => {
       if (!data || typeof data !== "object") return;
       const roomId = typeof data.roomId === "string" ? data.roomId : "default";
+
+      // 30fpsスロットリング（33ms間隔）
+      const now = Date.now();
+      const lastSent = socket.data.lastSensorSent || 0;
+      if (now - lastSent < 33) return;
+      socket.data.lastSensorSent = now;
+
       // バリデーション済みのフィールドのみ転送
       const payload = {
         playerId: socket.id,

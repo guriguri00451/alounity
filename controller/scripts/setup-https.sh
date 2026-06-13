@@ -37,8 +37,13 @@ mkdir -p "$CERT_DIR"
 
 echo -e "${GREEN}✓ 証明書ディレクトリを作成しました: $CERT_DIR${NC}"
 
-# ローカルIPアドレスを取得
-LOCAL_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $2}')
+# ローカルIPアドレスを取得（ifconfig → ipコマンドのフォールバック）
+LOCAL_IP=""
+if command -v ifconfig &> /dev/null; then
+    LOCAL_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $2}' || true)
+elif command -v ip &> /dev/null; then
+    LOCAL_IP=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '^127\.' | head -1 || true)
+fi
 
 # 既存の証明書を削除
 rm -f "$CERT_DIR"/*.pem
