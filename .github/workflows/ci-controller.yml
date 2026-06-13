@@ -11,32 +11,82 @@ on:
       - 'controller/**'
 
 jobs:
-  ci:
+  lint:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: controller
-    
     steps:
       - uses: actions/checkout@v4
-      
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: 'controller/package-lock.json'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Biome check (lint + format)
-        run: npm run check
-      
+      - run: npm ci
+      - name: Biome lint
+        run: npm run lint
+
+  format:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: controller
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'controller/package-lock.json'
+      - run: npm ci
+      - name: Biome format check
+        run: npm run format:check
+
+  typecheck:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: controller
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'controller/package-lock.json'
+      - run: npm ci
       - name: TypeScript type check
         run: npm run typecheck
-      
+
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: controller
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'controller/package-lock.json'
+      - run: npm ci
       - name: Run tests
         run: npm run test:run
-      
+
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: controller
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'controller/package-lock.json'
+      - run: npm ci
       - name: Build
         run: npm run build
