@@ -94,4 +94,3 @@ controller/
 
 - [実装計画](../docs/controller-implementation-plan.md)
 - [開発ルール](../AGENTS.md)
-- [AIエージェント設定ガイド](../docs/ai-agent-setup-guide.md)
