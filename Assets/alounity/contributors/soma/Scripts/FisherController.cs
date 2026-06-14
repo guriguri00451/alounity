@@ -1,12 +1,14 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using FishRumble;
-public class FisherControler : MonoBehaviour
+public class FisherController : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private Transform RodTransform;
-    [SerializeField] private Rigidbody hookRigidbody;
-    [SerializeField] private SpringJoint hookSpringJoint;
+    [SerializeField] private Transform rodTransform;
+    [SerializeField] private Transform lineAttachPoint;
+    [SerializeField] private Transform hookTransform;
+    private Rigidbody hookRigidbody;
+    [SerializeField] private SpringJoint lineSpringJoint;
     [SerializeField] private FisherSpringJointConfig springJointConfig;
     [Header("ControlValues")]
     [Range(-1, 1)]
@@ -26,6 +28,14 @@ public class FisherControler : MonoBehaviour
     void Start()
     {
         SubscribeInput();
+        GetHookReferences();
+        SetupHook(false);
+    }
+
+    void GetHookReferences()
+    {
+        hookRigidbody = hookTransform.GetComponent<Rigidbody>();
+        lineSpringJoint = hookTransform.GetComponent<SpringJoint>();
     }
     void Update()
     {
@@ -65,15 +75,15 @@ public class FisherControler : MonoBehaviour
         }
 
         float targetAngle = Mathf.Lerp(rodMinRotation, rodMaxRotation, (horizontalInput + 1f) / 2f);
-        float currentAngle = RodTransform.localEulerAngles.y;
+        float currentAngle = rodTransform.localEulerAngles.y;
         // localEulerAngles は 0〜360 で返るので -180〜180 に変換する
         if (currentAngle > 180f) currentAngle -= 360f;
 
         float smoothedAngle = Mathf.Lerp(currentAngle, targetAngle, Time.deltaTime * rodRotationSpeed);
-        RodTransform.localEulerAngles = new Vector3(
-            RodTransform.localEulerAngles.x,
+        rodTransform.localEulerAngles = new Vector3(
+            rodTransform.localEulerAngles.x,
             smoothedAngle,
-            RodTransform.localEulerAngles.z
+            rodTransform.localEulerAngles.z
         );
     }
 
@@ -84,7 +94,7 @@ public class FisherControler : MonoBehaviour
     void ManageState(FisherState newState)
     {
         currentState = newState;
-        springJointConfig.Get(currentState).ApplyTo(hookSpringJoint);
+        springJointConfig.Get(currentState).ApplyTo(lineSpringJoint);
     }
 
     /// <summary>
@@ -98,7 +108,7 @@ public class FisherControler : MonoBehaviour
 
         // 前に投げる
         hookRigidbody.isKinematic = false;
-        hookRigidbody.AddForce(Vector3.forward + castDirection, ForceMode.Impulse);
+        hookRigidbody.AddForce(lineAttachPoint.forward + castDirection, ForceMode.Impulse);
     }
 
     /// <summary>
@@ -108,15 +118,48 @@ public class FisherControler : MonoBehaviour
     void Reel(InputAction.CallbackContext context)
     {
         //　Catching時以外は動作しないようにする
-        if (currentState != FisherState.Catching) return;
+        if (currentState != FisherState.Catching)
+        {
+            PullingLine();
+        }
+        else if (currentState == FisherState.Swinging)
+        {
+            ShortenLine();
+        }
+    }
 
+    void PullingLine()
+    {
         reelCount++;
         if (reelCount >= requiredReelShakeCount)
         {
             hookRigidbody.isKinematic = false;
-            hookRigidbody.AddForce(Vector3.back * 10, ForceMode.Impulse);
+            hookRigidbody.AddForce(lineAttachPoint.forward * 10, ForceMode.Impulse);
             ManageState(FisherState.Swinging);
             reelCount = 0;
         }
+    }
+    void ShortenLine()
+    {
+        lineSpringJoint.maxDistance = Mathf.Max(0.5f, lineSpringJoint.maxDistance - 0.5f);
+    }
+
+    /// <summary>
+    /// フックの物理挙動を切り替える。リリース状態なら物理挙動を有効にし、そうでないなら無効にする。
+    /// </summary>
+    /// <param name="isReleased"></param>
+    void SetupHook(bool isReleased)
+    {
+        if (isReleased)
+        {
+            hookRigidbody.isKinematic = false;
+            hookTransform.SetParent(null);
+        }
+        else
+        {
+            hookRigidbody.isKinematic = true;
+            hookTransform.SetParent(lineAttachPoint);
+        }
+        
     }
 }

@@ -2,69 +2,94 @@
 
 ## 1. 全体クラス図
 
-> `<<planned>>` は未実装（対応 Issue 参照）。矢印の意味は§3 凡例を参照。
+> `<<planned>>` は未実装。それ以外は実装済み。
 
 ```mermaid
 classDiagram
+    class FisherControler {
+        <<MonoBehaviour>>
+        -FisherState currentState
+        -FisherSpringJointConfig springJointConfig
+        -ManageState(FisherState)
+        -Cast(CallbackContext)
+        -Reel(CallbackContext)
+    }
+
+    class HookMover {
+        <<MonoBehaviour>>
+        -float buoyancyForce
+        -ApplyBuoyancy()
+    }
+
+    class FisherSpringJointConfig {
+        <<ScriptableObject>>
+        +Get(FisherState) SpringJointSettings
+    }
+
+    class SpringJointSettings {
+        <<Serializable>>
+        +ApplyTo(SpringJoint)
+    }
+
+    class FisherState {
+        <<enumeration>>
+        Idle
+        Waiting
+        Catching
+        Swinging
+    }
+
     class BoatController {
         <<MonoBehaviour>>
-        -Transform center
-        -WheelCollider[] wheels
         -float power
         -InputActionProperty[] boat
-        +Start()
-        +FixedUpdate()
         +Disable()
     }
 
     class CameraController {
         <<MonoBehaviour>>
         +Transform target
-        +Vector3 offset
         +float smoothTime
-        -Vector3 velocity
-        -Rigidbody targetRb
-        +Start()
-        +LateUpdate()
     }
 
-    class FisherController {
+    class PlayerManager {
         <<MonoBehaviour, planned>>
-        +Start()
-        +Update()
-    }
-
-    class HookMover {
-        <<MonoBehaviour, planned>>
+        +BoatController boat
+        +FisherControler fisher
+        +CameraController camera
+        +int teamId
     }
 
     class GameManager {
         <<Singleton, planned>>
-        -GameManager instance$
-        +Instance GameManager$
+        +List~PlayerManager~ players
     }
 
+    FisherControler --> HookMover : controls
+    FisherControler --> FisherSpringJointConfig : uses
+    FisherControler --> FisherState : manages state
+    FisherSpringJointConfig *-- SpringJointSettings : owns
     CameraController --> BoatController : follows
-    FisherController *-- HookMover : owns
-    GameManager --> BoatController : manages
-    GameManager --> FisherController : manages
+    PlayerManager *-- BoatController : owns
+    PlayerManager *-- FisherControler : owns
+    PlayerManager *-- CameraController : owns
+    GameManager "1" *-- "6" PlayerManager : manages
 ```
 
 ---
 
 ## 2. 釣り機能 ステートマシン
 
-> `FisherController` の状態遷移（[Issue #3](https://github.com/guriguri00451/alounity/issues/3), [#4](https://github.com/guriguri00451/alounity/issues/4) で実装予定）
+> `FisherControler.ManageState()` で遷移。`Cast()` / `Reel()` が入力トリガー。
 
 ```mermaid
 stateDiagram-v2
     [*] --> Idle
 
-    Idle --> Waiting : キャスト入力（スマホを振りかぶる）
-    Waiting --> Catching : キャスト実行（スマホを前に投げる）
-    Catching --> Swinging : 魚がヒット
-    Catching --> Idle : タイムアウト・逃げられた
-    Swinging --> Idle : 攻撃完了 / 魚を手放す
+    Idle --> Catching : Cast入力（hookにAddForce）
+    Catching --> Swinging : Reel入力 × requiredReelShakeCount 回
+    Swinging --> Idle : 攻撃完了
+    Catching --> Idle : タイムアウト（未実装）
 ```
 
 ---
@@ -74,10 +99,12 @@ stateDiagram-v2
 | 記法 | 意味 |
 |------|------|
 | `<<planned>>` | 未実装クラス（対応 Issue を参照） |
-| `<<Singleton>>` | インスタンスが1つのみ（GameManager） |
+| `<<Singleton>>` | インスタンスが1つのみ |
+| `<<enumeration>>` | enum 型 |
+| `<<ScriptableObject>>` | Unity ScriptableObject（アセットとして保存） |
+| `<<Serializable>>` | Inspector/JSON シリアライズ可能な純粋クラス |
 | `-->` | 依存（参照するが所有しない） |
 | `*--` | コンポジション（ライフサイクルを共にする） |
-| `o--` | 集約（独立して存在できる） |
 | `-` prefix | private メンバ |
 | `+` prefix | public メンバ |
 | `$` suffix | static メンバ |
