@@ -20,7 +20,11 @@ public class BoatController : MonoBehaviour
             wheels[i].motorTorque = boat[i].action.ReadValue<float>()*power;
         }
     }
-    void Disable()
+    void OnEnable()
+    {
+        for(int i=0;i<boat.Length;i++) boat[i].action.Enable();
+    }
+    void OnDisable()
     {
         for(int i=0;i<boat.Length;i++)boat[i].action.Disable();
     }
