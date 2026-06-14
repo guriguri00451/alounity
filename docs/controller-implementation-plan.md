@@ -31,20 +31,14 @@ alounity/
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── layout.tsx
-│   │   │   ├── page.tsx       # コントローラー画面
-│   │   │   └── api/
-│   │   │       └── socket/
-│   │   │           └── route.ts  # Socket.IO統合用
-│   │   ├── components/
-│   │   │   ├── SensorDisplay.tsx    # センサー値表示コンポーネント
-│   │   │   └── PermissionRequest.tsx # iOS権限リクエスト
-│   │   ├── hooks/
-│   │   │   ├── useDeviceMotion.ts   # DeviceMotionEvent + DeviceOrientationEventフック
-│   │   │   └── useSocket.ts         # Socket.IO通信フック
-│   │   └── lib/
-│   │       └── socket-client.ts     # Socket.IOクライアント
+│   │   │   └── page.tsx       # コントローラー画面
+│   │   ├── components/        # UIコンポーネント（未実装）
+│   │   ├── hooks/             # カスタムフック（未実装）
+│   │   └── lib/               # ユーティリティ（未実装）
 │   ├── server/
-│   │   └── index.ts           # カスタムサーバー（Socket.IO統合）
+│   │   └── index.ts           # カスタムサーバー（Socket.IO統合、HTTPS対応）✅ 実装済み
+│   ├── scripts/
+│   │   └── setup-https.sh     # HTTPS証明書生成スクリプト ✅ 実装済み
 │   ├── public/
 │   ├── package.json
 │   ├── tsconfig.json
@@ -58,11 +52,12 @@ alounity/
 
 | 層 | 技術 | バージョン |
 |---|---|---|
-| フロントエンド | Next.js (App Router), React 19 | 16.2.9 |
+| フロントエンド | Next.js 16.x (App Router), React 19 | 16.2.9 |
 | リアルタイム通信 | Socket.IO (client: `socket.io-client`, server: `socket.io`) | 4.8.3 |
 | センサー API | Device Orientation Events（`DeviceMotionEvent` / `DeviceOrientationEvent`） | - |
 | HTTPS | mkcert（ローカル開発用） | - |
 | 言語 | TypeScript | - |
+| Unity Socket.IO | SocketIoClientDotNet | 1.0.8（未導入） |
 
 ## 通信アーキテクチャ
 
@@ -87,36 +82,40 @@ Unity
 
 | イベント名 | 方向 | データ |
 |---|---|---|
-| `controller:connect` | スマホ → サーバー | `{ playerId, controllerType }` |
-| `controller:sensor` | スマホ → サーバー | `{ playerId, accel: {x,y,z}, rotation: {alpha,beta,gamma}, timestamp }` |
-| `server:ack` | サーバー → スマホ | `{ received: true }` |
-| `unity:connect` | Unity → サーバー | `{ roomId }` |
-| `sensor:data` | サーバー → Unity | `{ playerId, accel, rotation, timestamp }` |
-| `room:state` | サーバー → 全員 | `{ players: [...], status }` |
+| `controller:connect` | スマホ → サーバー | `{ roomId?: string }` |
+| `controller:sensor` | スマホ → サーバー | `{ roomId?: string, role?: string, accel?, rotation?, orientation?, timestamp? }` |
+| `server:ack` | サーバー → スマホ | `{ received: boolean, playerId?: string, error?: string }` |
+| `unity:connect` | Unity → サーバー | `{ roomId?: string }` |
+| `sensor:data` | サーバー → Unity | `{ playerId, role, accel, rotation, orientation, timestamp }` |
+
+**注記:** `room:state`イベントは現在実装されていません。
 
 ## 実装フェーズ
 
 ### Phase 1: プロジェクトセットアップ
 
-#### 1-1. Next.jsプロジェクト作成
+#### 1-1. Next.jsプロジェクト作成 ✅ 完了
 
-- `controller/` 配下にNext.js 15をセットアップ
+- `controller/` 配下にNext.js 16.xをセットアップ
 - TypeScript, App Router, Tailwind CSS
 - 依存関係追加: `socket.io`, `socket.io-client`
 
-#### 1-2. カスタムサーバー構成
+#### 1-2. カスタムサーバー構成 ✅ 完了
 
 - Socket.IOをNext.jsと統合するため、カスタムサーバー（`server/index.ts`）を作成
 - Next.jsのデフォルトサーバーではSocket.IOのWebSocket接続を扱えないため、`next` + `http.Server` + `socket.io` を組み合わせたカスタムサーバーを使用
-- ポート: 3000（HTTPS）
+- ポート: 3000
+- Socket.IOイベント: `controller:connect`, `controller:sensor`, `sensor:data`, `unity:connect`
+- ルーム機能: `roomId`ベースのルーム管理
 
-#### 1-3. HTTPS環境構築（mkcert）
+#### 1-3. HTTPS環境構築（mkcert） ✅ 完了
 
-- `mkcert`をHomebrewでインストール
-- ローカルCAを作成
-- `localhost` と `*.local`（スマホからのアクセス用）の証明書を作成
-- `certs/` ディレクトリに保存（`.gitignore`に追加）
-- Next.jsカスタムサーバーでHTTPS化
+- `scripts/setup-https.sh` で証明書生成スクリプトを作成
+- カスタムサーバーでHTTPS対応を実装（`HTTPS=true`環境変数でHTTPSモード起動）
+- `npm run setup:https` でmkcertを使用した証明書生成
+- `npm run dev:https` でHTTPSサーバーを起動
+- `certs/` ディレクトリに証明書を保存（`.gitignore`に追加済み）
+- localhost、127.0.0.1、ローカルIPアドレス用の証明書を生成
 
 ### Phase 2: センサーデータ取得
 
@@ -162,6 +161,65 @@ Unity
 - 接続時にプレイヤーIDを割り当て（UUID）
 - ルーム概念: 同一ルーム内のプレイヤーのセンサーデータをUnityに転送
 
+#### 3-4. Unity側Socket.IOクライアント実装 ⏳ 未着手
+
+**技術選定:** SocketIoClientDotNet（C#製Socket.IOクライアント）
+
+**NuGetパッケージ情報:**
+- パッケージID: `SocketIoClientDotNet`
+- 推奨バージョン: `1.0.8`（最新安定版）
+- 依存関係: `WebSocket4Net`, `EngineIoClientDotNet`, `Newtonsoft.Json`
+
+**選定理由:**
+- Socket.IOプロトコル完全対応（自前実装不要）
+- イベントベースのAPIで直感的
+- ルーム機能対応
+- 自動再接続機能
+
+**実装内容:**
+- Socket.IOサーバーへの接続
+- `sensor:data`イベントの受信
+- 受信したセンサーデータをゲームオブジェクトに適用
+- 再接続ロジック
+
+**作成ファイル（TBD - 未作成）:**
+```text
+Assets/alounity/
+└── Scripts/
+    └── Network/
+        ├── SocketIOManager.cs      # Socket.IO接続管理（Singleton）- TBD
+        └── SensorDataReceiver.cs   # センサーデータ受信・適用 - TBD
+```
+
+**注記:** 上記ファイルは現在リポジトリに存在しません。実装時に作成してください。
+- `SocketIOManager.cs`: SingletonパターンでSocket.IO接続を管理、再接続処理を実装
+- `SensorDataReceiver.cs`: `sensor:data`イベントをリッスンし、受信データをゲームロジックに適用
+
+**SocketIoClientDotNetの導入方法:**
+1. NuGetパッケージマネージャーで`SocketIoClientDotNet`をインストール
+2. または、DLLを直接`Assets/Plugins/`に配置
+3. Unity Package Manager (UPM) での導入は公式サポート外（サードパーティラッパーが必要）
+
+**使用例:**
+```csharp
+using Quobject.SocketIoClientDotNet.Client;
+
+var socket = IO.Socket("http://localhost:3000");
+socket.On(Socket.EVENT_CONNECT, () => {
+    Debug.Log("Connected to server");
+    socket.Emit("unity:connect", new { roomId = "room1" });
+});
+socket.On("sensor:data", (data) => {
+    Debug.Log($"Received sensor data: {data}");
+    // センサーデータをゲームロジックに適用
+});
+```
+
+**websocket-sharpが非推奨の理由:**
+- Socket.IOプロトコル未対応
+- エンジンIOのハンドシェイク、パケットフォーマット、再接続ロジックなどを自前実装が必要
+- 開発工数が大幅に増加
+
 ### Phase 4: 動作確認・最適化
 
 #### 4-1. スマホからのアクセス確認
@@ -176,10 +234,10 @@ Unity
 - バイナリ送信の検討（Socket.IOはバイナリ対応済み）
 - 圧縮オプション有効化
 
-#### 4-3. Unity側接続（次回以降）
+#### 4-3. Unity側接続
 
-- UnityからSocket.IOクライアントとして接続（`SocketIoClientDotNet`や`NativeWebSocket`等）
-- サーバーから受信したセンサーデータをUnity側で処理
+- Phase 3の3-4で実装済み
+- SocketIoClientDotNetを使用してサーバーから受信したセンサーデータをUnity側で処理
 
 ## 最初の実装マイルストーン
 
