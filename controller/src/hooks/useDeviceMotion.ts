@@ -23,8 +23,9 @@ export function useDeviceMotion(options: UseDeviceMotionOptions = {}) {
   const { throttleMs = 33 } = options; // デフォルト30fps（33ms間隔）
 
   const [sensorData, setSensorData] = useState<SensorData | null>(null);
-  const [isSupported, setIsSupported] = useState(true);
+  const [isSupported, setIsSupported] = useState(false);
   const lastSentRef = useRef<number>(0);
+  const orientationLastSentRef = useRef<number>(0);
 
   // センサーAPIのサポート確認
   useEffect(() => {
@@ -33,9 +34,7 @@ export function useDeviceMotion(options: UseDeviceMotionOptions = {}) {
     const hasDeviceMotion = "DeviceMotionEvent" in window;
     const hasDeviceOrientation = "DeviceOrientationEvent" in window;
 
-    if (!hasDeviceMotion && !hasDeviceOrientation) {
-      setIsSupported(false);
-    }
+    setIsSupported(hasDeviceMotion || hasDeviceOrientation);
   }, []);
 
   // DeviceMotionEventハンドラー
@@ -49,7 +48,7 @@ export function useDeviceMotion(options: UseDeviceMotionOptions = {}) {
       }
       lastSentRef.current = now;
 
-      const data: SensorData = {
+      setSensorData((prev) => ({
         acceleration: event.acceleration
           ? {
               x: event.acceleration.x,
@@ -71,27 +70,48 @@ export function useDeviceMotion(options: UseDeviceMotionOptions = {}) {
               gamma: event.rotationRate.gamma,
             }
           : null,
-        orientation: null, // DeviceOrientationEventで取得
+        orientation: prev?.orientation ?? null,
         timestamp: now,
-      };
-
-      setSensorData(data);
+      }));
     },
     [throttleMs]
   );
 
   // DeviceOrientationEventハンドラー
-  const handleDeviceOrientation = useCallback((event: DeviceOrientationEvent) => {
-    setSensorData((prev) => ({
-      ...prev!,
-      orientation: {
-        alpha: event.alpha,
-        beta: event.beta,
-        gamma: event.gamma,
-      },
-      timestamp: Date.now(),
-    }));
-  }, []);
+  const handleDeviceOrientation = useCallback(
+    (event: DeviceOrientationEvent) => {
+      const now = Date.now();
+
+      if (now - orientationLastSentRef.current < throttleMs) return;
+      orientationLastSentRef.current = now;
+
+      setSensorData((prev) => {
+        if (!prev) {
+          return {
+            acceleration: null,
+            accelerationIncludingGravity: null,
+            rotationRate: null,
+            orientation: {
+              alpha: event.alpha,
+              beta: event.beta,
+              gamma: event.gamma,
+            },
+            timestamp: now,
+          };
+        }
+        return {
+          ...prev,
+          orientation: {
+            alpha: event.alpha,
+            beta: event.beta,
+            gamma: event.gamma,
+          },
+          timestamp: now,
+        };
+      });
+    },
+    [throttleMs]
+  );
 
   // イベントリスナーの登録
   const startListening = useCallback(() => {
