@@ -25,6 +25,9 @@ export function PermissionRequest({
     setIsLoading(true);
 
     try {
+      let motionGranted = true;
+      let orientationGranted = true;
+
       // DeviceMotionEventの権限リクエスト（iOS 13+）
       const MotionEvent = DeviceMotionEvent as unknown as PermissionRequestableEvent;
       if (
@@ -32,13 +35,7 @@ export function PermissionRequest({
         typeof MotionEvent.requestPermission === "function"
       ) {
         const motionPermission = await MotionEvent.requestPermission();
-
-        if (motionPermission !== "granted") {
-          setPermissionState("denied");
-          onPermissionDenied?.();
-          setIsLoading(false);
-          return;
-        }
+        motionGranted = motionPermission === "granted";
       }
 
       // DeviceOrientationEventの権限リクエスト（iOS 13+）
@@ -48,18 +45,16 @@ export function PermissionRequest({
         typeof OrientationEvent.requestPermission === "function"
       ) {
         const orientationPermission = await OrientationEvent.requestPermission();
-
-        if (orientationPermission !== "granted") {
-          setPermissionState("denied");
-          onPermissionDenied?.();
-          setIsLoading(false);
-          return;
-        }
+        orientationGranted = orientationPermission === "granted";
       }
 
-      // 両方の権限が許可された
-      setPermissionState("granted");
-      onPermissionGranted();
+      if (motionGranted && orientationGranted) {
+        setPermissionState("granted");
+        onPermissionGranted();
+      } else {
+        setPermissionState("denied");
+        onPermissionDenied?.();
+      }
     } catch (error) {
       console.error("Permission request failed:", error);
       setPermissionState("unsupported");

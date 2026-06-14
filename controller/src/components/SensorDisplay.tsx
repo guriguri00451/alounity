@@ -24,9 +24,21 @@ export function SensorDisplay({ sensorData }: SensorDisplayProps) {
         <div>
           <h3 className="text-sm font-semibold text-gray-700 mb-1">加速度 [m/s²]（重力除く）</h3>
           <div className="grid grid-cols-3 gap-2">
-            <AxisValue label="X" value={sensorData.acceleration.x} color="red" />
-            <AxisValue label="Y" value={sensorData.acceleration.y} color="green" />
-            <AxisValue label="Z" value={sensorData.acceleration.z} color="blue" />
+            <AxisValue label="X" value={sensorData.acceleration.x} color="red" min={-20} max={20} />
+            <AxisValue
+              label="Y"
+              value={sensorData.acceleration.y}
+              color="green"
+              min={-20}
+              max={20}
+            />
+            <AxisValue
+              label="Z"
+              value={sensorData.acceleration.z}
+              color="blue"
+              min={-20}
+              max={20}
+            />
           </div>
         </div>
       )}
@@ -36,9 +48,27 @@ export function SensorDisplay({ sensorData }: SensorDisplayProps) {
         <div>
           <h3 className="text-sm font-semibold text-gray-700 mb-1">加速度 [m/s²]（重力含む）</h3>
           <div className="grid grid-cols-3 gap-2">
-            <AxisValue label="X" value={sensorData.accelerationIncludingGravity.x} color="red" />
-            <AxisValue label="Y" value={sensorData.accelerationIncludingGravity.y} color="green" />
-            <AxisValue label="Z" value={sensorData.accelerationIncludingGravity.z} color="blue" />
+            <AxisValue
+              label="X"
+              value={sensorData.accelerationIncludingGravity.x}
+              color="red"
+              min={-20}
+              max={20}
+            />
+            <AxisValue
+              label="Y"
+              value={sensorData.accelerationIncludingGravity.y}
+              color="green"
+              min={-20}
+              max={20}
+            />
+            <AxisValue
+              label="Z"
+              value={sensorData.accelerationIncludingGravity.z}
+              color="blue"
+              min={-20}
+              max={20}
+            />
           </div>
         </div>
       )}
@@ -48,9 +78,27 @@ export function SensorDisplay({ sensorData }: SensorDisplayProps) {
         <div>
           <h3 className="text-sm font-semibold text-gray-700 mb-1">回転角速度 [deg/s]</h3>
           <div className="grid grid-cols-3 gap-2">
-            <AxisValue label="α" value={sensorData.rotationRate.alpha} color="purple" />
-            <AxisValue label="β" value={sensorData.rotationRate.beta} color="purple" />
-            <AxisValue label="γ" value={sensorData.rotationRate.gamma} color="purple" />
+            <AxisValue
+              label="α"
+              value={sensorData.rotationRate.alpha}
+              color="purple"
+              min={-360}
+              max={360}
+            />
+            <AxisValue
+              label="β"
+              value={sensorData.rotationRate.beta}
+              color="purple"
+              min={-360}
+              max={360}
+            />
+            <AxisValue
+              label="γ"
+              value={sensorData.rotationRate.gamma}
+              color="purple"
+              min={-360}
+              max={360}
+            />
           </div>
         </div>
       )}
@@ -60,9 +108,27 @@ export function SensorDisplay({ sensorData }: SensorDisplayProps) {
         <div>
           <h3 className="text-sm font-semibold text-gray-700 mb-1">端末の向き [度]</h3>
           <div className="grid grid-cols-3 gap-2">
-            <AxisValue label="α" value={sensorData.orientation.alpha} color="orange" />
-            <AxisValue label="β" value={sensorData.orientation.beta} color="orange" />
-            <AxisValue label="γ" value={sensorData.orientation.gamma} color="orange" />
+            <AxisValue
+              label="α"
+              value={sensorData.orientation.alpha}
+              color="orange"
+              min={0}
+              max={360}
+            />
+            <AxisValue
+              label="β"
+              value={sensorData.orientation.beta}
+              color="orange"
+              min={-180}
+              max={180}
+            />
+            <AxisValue
+              label="γ"
+              value={sensorData.orientation.gamma}
+              color="orange"
+              min={-180}
+              max={180}
+            />
           </div>
         </div>
       )}
@@ -80,9 +146,11 @@ interface AxisValueProps {
   label: string;
   value: number | null;
   color: "red" | "green" | "blue" | "purple" | "orange";
+  min?: number;
+  max?: number;
 }
 
-function AxisValue({ label, value, color }: AxisValueProps) {
+function AxisValue({ label, value, color, min = -100, max = 100 }: AxisValueProps) {
   const colorClasses = {
     red: "bg-red-100 text-red-700",
     green: "bg-green-100 text-green-700",
@@ -101,8 +169,8 @@ function AxisValue({ label, value, color }: AxisValueProps) {
 
   const displayValue = value !== null ? value.toFixed(2) : "N/A";
 
-  // バーの幅を計算（-100〜100の範囲を0〜100%にマッピング）
-  const barWidth = value !== null ? Math.min(Math.max((value + 100) / 2, 0), 100) : 50;
+  const barWidth =
+    value !== null ? Math.min(Math.max(((value - min) / (max - min)) * 100, 0), 100) : 50;
 
   return (
     <div className={`p-2 rounded ${colorClasses[color]}`}>

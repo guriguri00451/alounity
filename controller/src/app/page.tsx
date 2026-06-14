@@ -7,12 +7,14 @@ import { useDeviceMotion } from "@/hooks/useDeviceMotion";
 
 export default function Home() {
   const [hasPermission, setHasPermission] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const { sensorData, isSupported, startListening, stopListening } = useDeviceMotion({
     throttleMs: 33, // 30fps
   });
 
   const handlePermissionGranted = useCallback(() => {
     setHasPermission(true);
+    setIsListening(true);
     startListening();
   }, [startListening]);
 
@@ -59,10 +61,10 @@ export default function Home() {
         <SensorDisplay sensorData={sensorData} />
 
         <div className="bg-white rounded-lg shadow-md p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">接続情報</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">センサー状態</h3>
           <div className="text-xs text-gray-600 space-y-1">
             <p>
-              状態: <span className="text-green-600 font-semibold">接続済み</span>
+              状態: <span className="text-green-600 font-semibold">リッスン中</span>
             </p>
             <p>スロットル: 30fps (33ms)</p>
           </div>
@@ -71,10 +73,10 @@ export default function Home() {
         <div className="text-center pt-4">
           <button
             type="button"
-            onClick={stopListening}
+            onClick={isListening ? stopListening : startListening}
             className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm"
           >
-            センサー停止
+            {isListening ? "センサー停止" : "センサー再開"}
           </button>
         </div>
       </div>
