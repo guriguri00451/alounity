@@ -1,65 +1,83 @@
-import Image from "next/image";
+"use client";
+
+import { useCallback, useState } from "react";
+import { PermissionRequest } from "@/components/PermissionRequest";
+import { SensorDisplay } from "@/components/SensorDisplay";
+import { useDeviceMotion } from "@/hooks/useDeviceMotion";
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+  const [hasPermission, setHasPermission] = useState(false);
+  const { sensorData, isSupported, startListening, stopListening } = useDeviceMotion({
+    throttleMs: 33, // 30fps
+  });
+
+  const handlePermissionGranted = useCallback(() => {
+    setHasPermission(true);
+    startListening();
+  }, [startListening]);
+
+  const handlePermissionDenied = useCallback(() => {
+    console.log("Permission denied");
+  }, []);
+
+  // センサーAPIがサポートされていない場合
+  if (!isSupported) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">未対応ブラウザ</h1>
+          <p className="text-gray-700">
+            このブラウザはDeviceMotion/DeviceOrientation APIをサポートしていません。
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            iOS Safari（13+）またはChrome（Android）を使用してください。
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+    );
+  }
+
+  // 権限が許可されていない場合
+  if (!hasPermission) {
+    return (
+      <PermissionRequest
+        onPermissionGranted={handlePermissionGranted}
+        onPermissionDenied={handlePermissionDenied}
+      />
+    );
+  }
+
+  // メイン画面
+  return (
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-2xl mx-auto space-y-4">
+        <header className="text-center py-4">
+          <h1 className="text-2xl font-bold text-gray-800">スマホコントローラー</h1>
+          <p className="text-sm text-gray-600 mt-1">センサーデータをリアルタイムで表示</p>
+        </header>
+
+        <SensorDisplay sensorData={sensorData} />
+
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">接続情報</h3>
+          <div className="text-xs text-gray-600 space-y-1">
+            <p>
+              状態: <span className="text-green-600 font-semibold">接続済み</span>
+            </p>
+            <p>スロットル: 30fps (33ms)</p>
+          </div>
         </div>
-      </main>
+
+        <div className="text-center pt-4">
+          <button
+            type="button"
+            onClick={stopListening}
+            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm"
+          >
+            センサー停止
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
