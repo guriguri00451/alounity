@@ -42,7 +42,7 @@ LOCAL_IP=""
 if command -v ifconfig &> /dev/null; then
     LOCAL_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $2}' || true)
 elif command -v ip &> /dev/null; then
-    LOCAL_IP=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '^127\.' | head -1 || true)
+    LOCAL_IP=$(ip -4 addr show | awk '/inet /{split($2,a,"/"); if(a[1]!="127.0.0.1"){print a[1]; exit}}' || true)
 fi
 
 # 既存の証明書を削除
@@ -53,14 +53,10 @@ echo "証明書を生成中..."
 
 if [ -n "$LOCAL_IP" ]; then
     echo -e "${GREEN}ローカルIPアドレスを検出: $LOCAL_IP${NC}"
-    cd "$CERT_DIR"
-    mkcert -cert-file server.pem -key-file server-key.pem localhost 127.0.0.1 ::1 "$LOCAL_IP"
-    cd ..
+    mkcert -cert-file "$CERT_DIR/server.pem" -key-file "$CERT_DIR/server-key.pem" localhost 127.0.0.1 ::1 "$LOCAL_IP"
 else
     echo -e "${YELLOW}警告: ローカルIPアドレスを検出できませんでした${NC}"
-    cd "$CERT_DIR"
-    mkcert -cert-file server.pem -key-file server-key.pem localhost 127.0.0.1 ::1
-    cd ..
+    mkcert -cert-file "$CERT_DIR/server.pem" -key-file "$CERT_DIR/server-key.pem" localhost 127.0.0.1 ::1
 fi
 
 echo ""

@@ -31,22 +31,14 @@ alounity/
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── layout.tsx
-│   │   │   ├── page.tsx       # コントローラー画面
-│   │   │   └── api/
-│   │   │       └── socket/
-│   │   │           └── route.ts  # Socket.IO統合用
-│   │   ├── components/
-│   │   │   ├── SensorDisplay.tsx    # センサー値表示コンポーネント
-│   │   │   └── PermissionRequest.tsx # iOS権限リクエスト
-│   │   ├── hooks/
-│   │   │   ├── useDeviceMotion.ts   # DeviceMotionEvent + DeviceOrientationEventフック
-│   │   │   └── useSocket.ts         # Socket.IO通信フック
-│   │   └── lib/
-│   │       └── socket-client.ts     # Socket.IOクライアント
+│   │   │   └── page.tsx       # コントローラー画面
+│   │   ├── components/        # UIコンポーネント（未実装）
+│   │   ├── hooks/             # カスタムフック（未実装）
+│   │   └── lib/               # ユーティリティ（未実装）
 │   ├── server/
-│   │   └── index.ts           # カスタムサーバー（Socket.IO統合、HTTPS対応）
+│   │   └── index.ts           # カスタムサーバー（Socket.IO統合、HTTPS対応）✅ 実装済み
 │   ├── scripts/
-│   │   └── setup-https.sh     # HTTPS証明書生成スクリプト
+│   │   └── setup-https.sh     # HTTPS証明書生成スクリプト ✅ 実装済み
 │   ├── public/
 │   ├── package.json
 │   ├── tsconfig.json
@@ -60,12 +52,12 @@ alounity/
 
 | 層 | 技術 | バージョン |
 |---|---|---|
-| フロントエンド | Next.js (App Router), React 19 | 16.2.9 |
+| フロントエンド | Next.js 16.x (App Router), React 19 | 16.2.9 |
 | リアルタイム通信 | Socket.IO (client: `socket.io-client`, server: `socket.io`) | 4.8.3 |
 | センサー API | Device Orientation Events（`DeviceMotionEvent` / `DeviceOrientationEvent`） | - |
 | HTTPS | mkcert（ローカル開発用） | - |
 | 言語 | TypeScript | - |
-| Unity Socket.IO | SocketIoClientDotNet | 最新安定版 |
+| Unity Socket.IO | SocketIoClientDotNet | 1.0.8（未導入） |
 
 ## 通信アーキテクチャ
 
@@ -90,20 +82,21 @@ Unity
 
 | イベント名 | 方向 | データ |
 |---|---|---|
-| `controller:connect` | スマホ → サーバー | `{ playerId, controllerType }` |
-| `controller:sensor` | スマホ → サーバー | `{ playerId, accel: {x,y,z}, rotation: {alpha,beta,gamma}, timestamp }` |
-| `server:ack` | サーバー → スマホ | `{ received: true }` |
-| `unity:connect` | Unity → サーバー | `{ roomId }` |
-| `sensor:data` | サーバー → Unity | `{ playerId, accel, rotation, timestamp }` |
-| `room:state` | サーバー → 全員 | `{ players: [...], status }` |
+| `controller:connect` | スマホ → サーバー | `{ roomId?: string }` |
+| `controller:sensor` | スマホ → サーバー | `{ roomId?: string, role?: string, accel?, rotation?, orientation?, timestamp? }` |
+| `server:ack` | サーバー → スマホ | `{ received: boolean, playerId?: string, error?: string }` |
+| `unity:connect` | Unity → サーバー | `{ roomId?: string }` |
+| `sensor:data` | サーバー → Unity | `{ playerId, role, accel, rotation, orientation, timestamp }` |
+
+**注記:** `room:state`イベントは現在実装されていません。
 
 ## 実装フェーズ
 
 ### Phase 1: プロジェクトセットアップ
 
-#### 1-1. Next.jsプロジェクト作成
+#### 1-1. Next.jsプロジェクト作成 ✅ 完了
 
-- `controller/` 配下にNext.js 15をセットアップ
+- `controller/` 配下にNext.js 16.xをセットアップ
 - TypeScript, App Router, Tailwind CSS
 - 依存関係追加: `socket.io`, `socket.io-client`
 
@@ -168,7 +161,7 @@ Unity
 - 接続時にプレイヤーIDを割り当て（UUID）
 - ルーム概念: 同一ルーム内のプレイヤーのセンサーデータをUnityに転送
 
-#### 3-4. Unity側Socket.IOクライアント実装
+#### 3-4. Unity側Socket.IOクライアント実装 ⏳ 未着手
 
 **技術選定:** SocketIoClientDotNet（C#製Socket.IOクライアント）
 
