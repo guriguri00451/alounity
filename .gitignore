@@ -104,3 +104,16 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# AI Agent configuration files (各メンバーがローカルで設定)
+# 共通ルールは AGENTS.md に記載（Git管理）
+CLAUDE.md
+CLAUDE.local.md
+.cursor/
+.cursorrules
+.github/copilot-instructions.md
+.windsurfrules
+.opencode/
+.claude/
+.agents/
+opencode.json
