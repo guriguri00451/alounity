@@ -108,7 +108,10 @@ public class FisherController : MonoBehaviour
         Debug.Log($"State changed: {currentState} -> {newState}");
         springJointConfig.Get(currentState).ApplyTo(lineSpringJoint);
 
-        //移行する際の処理
+        // Swinging から離脱するとき攻撃判定を無効にする
+        if (currentState == FisherState.Swinging && caughtFish != null)
+            caughtFish.SetAttackActive(false);
+
         switch (newState)
         {
             case FisherState.Idle:
@@ -124,6 +127,7 @@ public class FisherController : MonoBehaviour
             case FisherState.Swinging:
                 _hook.Release();
                 caughtFish.Initialize();
+                caughtFish.SetAttackActive(true);
                 break;
         }
         currentState = newState;
