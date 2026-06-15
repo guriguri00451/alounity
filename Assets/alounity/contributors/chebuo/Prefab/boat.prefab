@@ -29,7 +29,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3, y: 0.5, z: 5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5425065822339928708}
@@ -41,7 +41,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 521925195755214959}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 8675452379081041382, guid: 4c5f2e0a7160e65499b085f7664d90c3, type: 3}
 --- !u!23 &7386639474477275671
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -67,7 +67,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: -8657442495611329697, guid: 4c5f2e0a7160e65499b085f7664d90c3, type: 3}
+  - {fileID: 1518376355081816147, guid: 4c5f2e0a7160e65499b085f7664d90c3, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -298,7 +299,7 @@ WheelCollider:
   m_GameObject: {fileID: 6820823317346592104}
   serializedVersion: 2
   m_Center: {x: 1, y: 0, z: 0}
-  m_Radius: 0.1
+  m_Radius: 0.25
   m_SuspensionSpring:
     spring: 8000
     damper: 1000
@@ -433,7 +434,7 @@ WheelCollider:
   m_GameObject: {fileID: 8712082460943919675}
   serializedVersion: 2
   m_Center: {x: -1, y: 0, z: 0}
-  m_Radius: 0.1
+  m_Radius: 0.25
   m_SuspensionSpring:
     spring: 8000
     damper: 1000
