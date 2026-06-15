@@ -26,4 +26,9 @@ public class SpringJointSettings
         joint.tolerance = tolerance;
         joint.enableCollision = enableCollision;
     }
+
+    public void ApplyMaxDistance(SpringJoint joint,float distance)
+    {
+        joint.maxDistance = maxDistance;
+    }
 }

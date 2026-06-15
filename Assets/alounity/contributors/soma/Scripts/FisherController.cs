@@ -1,11 +1,17 @@
+using R3;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using FishRumble;
+using Cysharp.Threading.Tasks;
+
+/// <summary>
+/// 釣り人のステートマシンを管理する。
+/// Idle → Waiting → Catching → Swinging → Idle のサイクルを制御する。
+/// </summary>
 public class FisherController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Transform rodTransform;
-    [SerializeField] private Transform lineAttachPoint;
     [SerializeField] private Transform hookTransform;
     private Rigidbody hookRigidbody;
     [SerializeField] private SpringJoint lineSpringJoint;
@@ -13,39 +19,52 @@ public class FisherController : MonoBehaviour
     [Header("ControlValues")]
     [Range(-1, 1)]
     [SerializeField] private float horizontalInput;
+
     [Header("Settings")]
     [SerializeField] private SomaInputActions input;
     [SerializeField] private bool isDebugMode = false;
+
     [Header("Parameters")]
     [SerializeField] private float rodRotationSpeed = 5f;
     [SerializeField] private float rodMinRotation = -45f;
     [SerializeField] private float rodMaxRotation = 45f;
     [SerializeField] private FisherState currentState = FisherState.Idle;
-    [SerializeField] private Vector3 castDirection = new Vector3(0, 0, 10);
-    private int reelCount = 0;
-    [SerializeField] private int requiredReelShakeCount = 5;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [SerializeField] private float castPower = 10f;
+    [SerializeField] private int CatchRequiredShakeCount = 12;
+    [SerializeField] private int DropRequiredShakeCount = 5;
+    [SerializeField] private float swingTimeoutSeconds = 1f;
+
+
+    private int shakeCount = 0;
+    private int swingCount = 0;
+    private float lastSwingTime = 0f;
+    private Fish caughtFish;
+    private Hook _hook;
+    private Quaternion initialRodRotation;
+
     void Start()
     {
         SubscribeInput();
         GetHookReferences();
-        SetupHook(false);
+        initialRodRotation = rodTransform.localRotation;
     }
 
     void GetHookReferences()
     {
         hookRigidbody = hookTransform.GetComponent<Rigidbody>();
-        lineSpringJoint = hookTransform.GetComponent<SpringJoint>();
+        _hook = hookTransform.GetComponent<Hook>();
+        _hook.onFishSpawned += CatchFish;
     }
+
     void Update()
     {
-        if(isDebugMode)
+        if (isDebugMode)
         {
-            // デバッグ時State切り替え
             if (Keyboard.current.digit1Key.wasPressedThisFrame) ManageState(FisherState.Idle);
             if (Keyboard.current.digit2Key.wasPressedThisFrame) ManageState(FisherState.Waiting);
             if (Keyboard.current.digit3Key.wasPressedThisFrame) ManageState(FisherState.Catching);
-            if (Keyboard.current.digit4Key.wasPressedThisFrame) ManageState(FisherState.Swinging);   
+            if (Keyboard.current.digit4Key.wasPressedThisFrame) ManageState(FisherState.Swinging);
+            if (Keyboard.current.spaceKey.wasPressedThisFrame) Shake();
         }
         RotateRod();
     }
@@ -55,31 +74,25 @@ public class FisherController : MonoBehaviour
         input = new SomaInputActions();
 
         input.Fisher.Cast.performed += Cast;
-        input.Fisher.Reel.performed += Reel;
+        input.Fisher.Shake.performed += Shake;
 
         input.Enable();
     }
-    void StartGame()
-    {
-        
-    }
 
     /// <summary>
-    /// 竿の回転を管理する。horizontalInputの値に応じて、rodMinRotation〜rodMaxRotationの範囲で回転させる.
+    /// 竿の回転を管理する。horizontalInput の値に応じて rodMinRotation〜rodMaxRotation の範囲で回転させる。
     /// </summary>
     void RotateRod()
     {
-        if(!isDebugMode)
+        if (!isDebugMode)
         {
             horizontalInput = input.Fisher.Rotate.ReadValue<float>();
         }
 
-        float targetAngle = Mathf.Lerp(rodMinRotation, rodMaxRotation, (horizontalInput + 1f) / 2f);
+        float targetAngle = Mathf.Lerp(rodMinRotation, rodMaxRotation, (horizontalInput + 1f) / 2f) + initialRodRotation.eulerAngles.y;
         float currentAngle = rodTransform.localEulerAngles.y;
-        // localEulerAngles は 0〜360 で返るので -180〜180 に変換する
-        if (currentAngle > 180f) currentAngle -= 360f;
 
-        float smoothedAngle = Mathf.Lerp(currentAngle, targetAngle, Time.deltaTime * rodRotationSpeed);
+        float smoothedAngle = Mathf.LerpAngle(currentAngle, targetAngle, Time.deltaTime * rodRotationSpeed);
         rodTransform.localEulerAngles = new Vector3(
             rodTransform.localEulerAngles.x,
             smoothedAngle,
@@ -88,78 +101,102 @@ public class FisherController : MonoBehaviour
     }
 
     /// <summary>
-    /// FisherStateを管理し、状態に応じたSpringJointのパラメータを適用する。
+    /// FisherState を遷移し、状態に応じた SpringJoint パラメータを適用する。
     /// </summary>
-    /// <param name="newState"></param>
     void ManageState(FisherState newState)
     {
-        currentState = newState;
+        Debug.Log($"State changed: {currentState} -> {newState}");
         springJointConfig.Get(currentState).ApplyTo(lineSpringJoint);
+
+        //移行する際の処理
+        switch (newState)
+        {
+            case FisherState.Idle:
+                _hook.DropFish();
+                break;
+            case FisherState.Waiting:
+                _hook.Release();
+                break;
+            case FisherState.Catching:
+                if(caughtFish == null) break;
+                _hook.CatchFish(caughtFish.transform);
+                break;
+            case FisherState.Swinging:
+                _hook.Release();
+                caughtFish.Initialize();
+                break;
+        }
+        currentState = newState;
     }
 
     /// <summary>
-    /// Idle状態のときにキャストする処理。竿を前に振り、フックを飛ばす。
+    /// Idle 状態のときにキャストする。針を切り離して前方に投げ、Waiting へ遷移する。
     /// </summary>
-    /// <param name="context"></param>
     void Cast(InputAction.CallbackContext context)
     {
-        // Idle状態のときにしかキャストできないようにする
         if (currentState != FisherState.Idle) return;
-
-        // 前に投げる
-        hookRigidbody.isKinematic = false;
-        hookRigidbody.AddForce(lineAttachPoint.forward + castDirection, ForceMode.Impulse);
+        ManageState(FisherState.Waiting);
+        hookRigidbody.AddForce(this.transform.forward * castPower, ForceMode.Impulse);
     }
 
     /// <summary>
-    /// Catching状態のときにリールを巻く処理。一定回数巻いたらSwinging状態に移行する。
+    /// スマホを振る動作に対応する入力コールバック。
+    /// Catching 中は糸を巻き上げ、Swinging 中は振り回し攻撃を行う。
     /// </summary>
-    /// <param name="context"></param>
-    void Reel(InputAction.CallbackContext context)
+    void Shake(InputAction.CallbackContext _) => Shake();
+
+    void Shake()
     {
-        //　Catching時以外は動作しないようにする
-        if (currentState != FisherState.Catching)
-        {
+        if (currentState == FisherState.Catching)
             PullingLine();
-        }
-        else if (currentState == FisherState.Swinging)
+        else if (currentState == FisherState.Waiting ||currentState == FisherState.Swinging)
+            SwingAttack();
+    }
+
+    /// <summary>
+    /// 糸を巻く。規定回数に達したら Swinging へ遷移する。
+    /// </summary>
+    void PullingLine()
+    {
+        shakeCount++;
+        if (shakeCount >= CatchRequiredShakeCount)
         {
-            ShortenLine();
+            shakeCount = 0;
+            ManageState(FisherState.Swinging);
         }
     }
 
-    void PullingLine()
+    /// <summary>
+    /// 振り回し攻撃。糸を縮めながら魚にダメージを与え、条件を満たしたら魚を落とす。
+    /// </summary>
+    void SwingAttack()
     {
-        reelCount++;
-        if (reelCount >= requiredReelShakeCount)
+        ShortenLine();
+
+        if (Time.time - lastSwingTime > swingTimeoutSeconds)
+            swingCount = 0;
+        lastSwingTime = Time.time;
+
+        swingCount++;
+
+        if (swingCount >= DropRequiredShakeCount)
         {
-            hookRigidbody.isKinematic = false;
-            hookRigidbody.AddForce(lineAttachPoint.forward * 10, ForceMode.Impulse);
-            ManageState(FisherState.Swinging);
-            reelCount = 0;
+            ManageState(FisherState.Idle);
         }
+
+        
     }
     void ShortenLine()
     {
         lineSpringJoint.maxDistance = Mathf.Max(0.5f, lineSpringJoint.maxDistance - 0.5f);
     }
 
-    /// <summary>
-    /// フックの物理挙動を切り替える。リリース状態なら物理挙動を有効にし、そうでないなら無効にする。
-    /// </summary>
-    /// <param name="isReleased"></param>
-    void SetupHook(bool isReleased)
+    void CatchFish(Fish fish)
     {
-        if (isReleased)
-        {
-            hookRigidbody.isKinematic = false;
-            hookTransform.SetParent(null);
-        }
-        else
-        {
-            hookRigidbody.isKinematic = true;
-            hookTransform.SetParent(lineAttachPoint);
-        }
-        
+        if (currentState != FisherState.Waiting) return;
+
+        ManageState(FisherState.Catching);
+        _hook.CatchFish(fish.transform);
+        caughtFish = fish.GetComponent<Fish>();
     }
 }

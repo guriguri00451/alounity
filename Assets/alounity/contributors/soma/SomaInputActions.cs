@@ -111,7 +111,7 @@ public partial class @SomaInputActions: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Reel"",
+                    ""name"": ""Shake"",
                     ""type"": ""Button"",
                     ""id"": ""0959b871-38d7-4053-94e8-7fbc452c983f"",
                     ""expectedControlType"": """",
@@ -172,7 +172,7 @@ public partial class @SomaInputActions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Reel"",
+                    ""action"": ""Shake"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -185,7 +185,7 @@ public partial class @SomaInputActions: IInputActionCollection2, IDisposable
         m_Fisher = asset.FindActionMap("Fisher", throwIfNotFound: true);
         m_Fisher_Rotate = m_Fisher.FindAction("Rotate", throwIfNotFound: true);
         m_Fisher_Cast = m_Fisher.FindAction("Cast", throwIfNotFound: true);
-        m_Fisher_Reel = m_Fisher.FindAction("Reel", throwIfNotFound: true);
+        m_Fisher_Shake = m_Fisher.FindAction("Shake", throwIfNotFound: true);
     }
 
     ~@SomaInputActions()
@@ -268,7 +268,7 @@ public partial class @SomaInputActions: IInputActionCollection2, IDisposable
     private List<IFisherActions> m_FisherActionsCallbackInterfaces = new List<IFisherActions>();
     private readonly InputAction m_Fisher_Rotate;
     private readonly InputAction m_Fisher_Cast;
-    private readonly InputAction m_Fisher_Reel;
+    private readonly InputAction m_Fisher_Shake;
     /// <summary>
     /// Provides access to input actions defined in input action map "Fisher".
     /// </summary>
@@ -289,9 +289,9 @@ public partial class @SomaInputActions: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Cast => m_Wrapper.m_Fisher_Cast;
         /// <summary>
-        /// Provides access to the underlying input action "Fisher/Reel".
+        /// Provides access to the underlying input action "Fisher/Shake".
         /// </summary>
-        public InputAction @Reel => m_Wrapper.m_Fisher_Reel;
+        public InputAction @Shake => m_Wrapper.m_Fisher_Shake;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -324,9 +324,9 @@ public partial class @SomaInputActions: IInputActionCollection2, IDisposable
             @Cast.started += instance.OnCast;
             @Cast.performed += instance.OnCast;
             @Cast.canceled += instance.OnCast;
-            @Reel.started += instance.OnReel;
-            @Reel.performed += instance.OnReel;
-            @Reel.canceled += instance.OnReel;
+            @Shake.started += instance.OnShake;
+            @Shake.performed += instance.OnShake;
+            @Shake.canceled += instance.OnShake;
         }
 
         /// <summary>
@@ -344,9 +344,9 @@ public partial class @SomaInputActions: IInputActionCollection2, IDisposable
             @Cast.started -= instance.OnCast;
             @Cast.performed -= instance.OnCast;
             @Cast.canceled -= instance.OnCast;
-            @Reel.started -= instance.OnReel;
-            @Reel.performed -= instance.OnReel;
-            @Reel.canceled -= instance.OnReel;
+            @Shake.started -= instance.OnShake;
+            @Shake.performed -= instance.OnShake;
+            @Shake.canceled -= instance.OnShake;
         }
 
         /// <summary>
@@ -402,11 +402,11 @@ public partial class @SomaInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnCast(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Reel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Shake" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnReel(InputAction.CallbackContext context);
+        void OnShake(InputAction.CallbackContext context);
     }
 }
