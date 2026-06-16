@@ -23,7 +23,7 @@ MonoBehaviour:
     spring: 10
     damper: 0.2
     minDistance: 0
-    maxDistance: 10
+    maxDistance: 15
     tolerance: 0.025
     enableCollision: 0
   catching:
