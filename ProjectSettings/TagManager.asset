@@ -7,14 +7,15 @@ TagManager:
   - Hook
   - FishZone
   - KayakRider
+  - HAND
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Boat
   - Water
   - UI
-  - 
+  - Ragdoll
   - 
   - 
   - 

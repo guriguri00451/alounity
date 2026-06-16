@@ -7,6 +7,7 @@ public class BoatController : MonoBehaviour
     [SerializeField] WheelCollider[] wheels;
     [SerializeField] float power=100;
     [SerializeField] InputActionProperty[] boat;
+    [SerializeField] OarAnimSetter[] oarAnim;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -17,7 +18,9 @@ public class BoatController : MonoBehaviour
     {
         for(int i=0;i<wheels.Length;i++)
         {
-            wheels[i].motorTorque = boat[i].action.ReadValue<float>()*power;
+            float input = boat[i].action.ReadValue<float>();
+            wheels[i].motorTorque = input*power;
+            oarAnim[i].SetSpeed(input != 0f);
         }
     }
     void OnEnable()

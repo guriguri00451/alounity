@@ -1,9 +1,9 @@
 {
     "version": 1,
-    "name": "SomaInputActions",
+    "name": "FishRumbleInput",
     "maps": [
         {
-            "name": "Fisher",
+            "name": "Player",
             "id": "e3a6257e-f6d1-4d37-9a74-aec1caefbcff",
             "actions": [
                 {
@@ -32,6 +32,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "BoatL",
+                    "type": "Value",
+                    "id": "a0c859f5-6c72-41e0-8ef4-ebf356fef760",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "BoatR",
+                    "type": "Value",
+                    "id": "513ef60b-9b29-40d1-8937-fe994de2e400",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -87,6 +105,50 @@
                     "processors": "",
                     "groups": "",
                     "action": "Shake",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3ba160fd-13a6-4a0f-bde9-69e54b1cc297",
+                    "path": "<Keyboard>/w",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "BoatL",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a9b90340-ab70-4170-ba6b-bf69986de5e7",
+                    "path": "<Accelerometer>/acceleration",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "BoatL",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2e49c43b-b4fa-4b02-a1bb-2bd59390b010",
+                    "path": "<Keyboard>/i",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "BoatR",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "8832df6a-5228-438b-b862-95a77adf0c4a",
+                    "path": "<Accelerometer>/acceleration",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "BoatR",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -21,7 +21,7 @@ public class FisherController : MonoBehaviour
     [SerializeField] private float horizontalInput;
 
     [Header("Settings")]
-    [SerializeField] private SomaInputActions input;
+    [SerializeField] private FishRumbleInput input;
     [SerializeField] private bool isDebugMode = false;
 
     [Header("Parameters")]
@@ -71,10 +71,10 @@ public class FisherController : MonoBehaviour
 
     void SubscribeInput()
     {
-        input = new SomaInputActions();
+        input = new FishRumbleInput();
 
-        input.Fisher.Cast.performed += Cast;
-        input.Fisher.Shake.performed += Shake;
+        input.Player.Cast.performed += Cast;
+        input.Player.Shake.performed += Shake;
 
         input.Enable();
     }
@@ -86,7 +86,7 @@ public class FisherController : MonoBehaviour
     {
         if (!isDebugMode)
         {
-            horizontalInput = input.Fisher.Rotate.ReadValue<float>();
+            horizontalInput = input.Player.Rotate.ReadValue<float>();
         }
 
         float targetAngle = Mathf.Lerp(rodMinRotation, rodMaxRotation, (horizontalInput + 1f) / 2f) + initialRodRotation.eulerAngles.y;
