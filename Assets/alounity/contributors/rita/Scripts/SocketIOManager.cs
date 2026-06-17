@@ -73,7 +73,7 @@ public class SocketIOManager : MonoBehaviour
         isReconnecting = false;
         Debug.Log($"[SocketIO] 接続完了: {serverUrl}");
 
-        await socket.EmitAsync("unity:connect", new object[] { roomId });
+        await socket.EmitAsync("unity:connect", new object[] { new { roomId } });
 
         OnConnected?.Invoke();
     }

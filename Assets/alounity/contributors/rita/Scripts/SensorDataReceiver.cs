@@ -18,14 +18,17 @@ public class SensorDataReceiver : MonoBehaviour
     void OnEnable()
     {
         var manager = SocketIOManager.Instance;
+        Debug.Log($"[SensorDataReceiver] OnEnable called. manager={(manager != null)}, socket={(manager?.Socket != null)}");
         if (manager?.Socket != null)
         {
             manager.Socket.On("sensor:data", OnSensorData);
+            Debug.Log("[SensorDataReceiver] Registered sensor:data callback");
         }
     }
 
     System.Threading.Tasks.Task OnSensorData(IEventContext response)
     {
+        Debug.Log("[SensorDataReceiver] OnSensorData called!");
         try
         {
             var payload = response.GetValue<SensorDataPayload>(0);

@@ -99,6 +99,7 @@ async function startServer() {
           data.orientation && typeof data.orientation === "object" ? data.orientation : null,
         timestamp: typeof data.timestamp === "number" ? data.timestamp : Date.now(),
       };
+      console.log(`[Socket.IO] sensor:data → room:${roomId}`, payload);
       io.to(`room:${roomId}`).emit("sensor:data", payload);
     });
 
@@ -106,7 +107,7 @@ async function startServer() {
     socket.on("unity:connect", (data) => {
       if (!data || typeof data !== "object") return;
       const roomId = typeof data.roomId === "string" ? data.roomId : "default";
-      console.log(`[Socket.IO] Unity connected:`, data);
+      console.log(`[Socket.IO] Unity connected:`, data, `→ joining room:${roomId}`);
       socket.join(`room:${roomId}`);
     });
 
