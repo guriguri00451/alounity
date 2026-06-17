@@ -20,7 +20,7 @@ public class BoatController : MonoBehaviour
         {
             float input = boat[i].action.ReadValue<float>();
             wheels[i].motorTorque = input*power;
-            oarAnim[i].SetSpeed(input != 0f);
+            if(oarAnim.Length != 0) oarAnim[i].SetSpeed(input != 0f);
         }
     }
     void OnEnable()
