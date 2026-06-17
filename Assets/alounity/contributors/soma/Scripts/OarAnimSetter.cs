@@ -6,6 +6,7 @@ public class OarAnimSetter : MonoBehaviour
     private Animator anim;
     [SerializeField] private float offsetTime;
     private float currentSpeed;
+    [SerializeField] private float inputValueThreshold = 0.8f;
     [SerializeField] private float maxSpeedRate = 1.4f;
     [SerializeField] private float maxTime = 1.0f;
     [SerializeField] private float noInputTimeThreshold = 0.3f;
@@ -18,9 +19,9 @@ public class OarAnimSetter : MonoBehaviour
         anim.SetFloat("CycleOffset",offsetTime);
     }
 
-    public void SetSpeed(bool hasInput)
+    public void SetSpeed(float _inputValue)
     {
-        if (hasInput)
+        if (_inputValue >= inputValueThreshold)
         {
             noInputTimer = 0f;
             float increaseSpeedRate = maxSpeedRate / maxTime;

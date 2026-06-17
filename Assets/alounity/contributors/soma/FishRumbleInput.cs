@@ -237,6 +237,61 @@ public partial class @FishRumbleInput: IInputActionCollection2, IDisposable
                     ""action"": ""BoatR"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b1e4a2c3-d5f6-47a8-b9c0-d1e2f3a4b5c6"",
+                    ""path"": ""<SmartphoneDevice>/boatL"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""BoatL"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c2f5b3d4-e6a7-58b9-ca01-e2f3a4b5c6d7"",
+                    ""path"": ""<SmartphoneDevice>/boatR"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""BoatR"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d3a6c4e5-f7b8-69ca-db12-f3a4b5c6d7e8"",
+                    ""path"": ""<SmartphoneDevice>/rotate"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Rotate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e4b7d5f6-a8c9-7adb-ec23-a4b5c6d7e8f9"",
+                    ""path"": ""<SmartphoneDevice>/cast"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Cast"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f5c8e6a7-b9da-8bec-fd34-b5c6d7e8f9a0"",
+                    ""path"": ""<SmartphoneDevice>/shake"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Shake"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
