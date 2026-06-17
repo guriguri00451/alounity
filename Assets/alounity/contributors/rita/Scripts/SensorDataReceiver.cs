@@ -1,3 +1,4 @@
+using System.Threading;
 using SocketIOClient;
 using UnityEngine;
 using UnityEngine.Events;
@@ -15,8 +16,12 @@ public class SensorDataReceiver : MonoBehaviour
     public UnityEvent<AxisData> onPaddleLeftInput;
     public UnityEvent<SensorDataPayload> onFisherInput;
 
+    SynchronizationContext mainThread;
+
     void Start()
     {
+        mainThread = SynchronizationContext.Current;
+
         var manager = SocketIOManager.Instance;
         Debug.Log($"[SensorDataReceiver] Start called. manager={(manager != null)}, connected={manager?.IsConnected}");
         if (manager == null)
@@ -50,33 +55,35 @@ public class SensorDataReceiver : MonoBehaviour
 
     System.Threading.Tasks.Task OnSensorData(IEventContext response)
     {
-        Debug.Log("[SensorDataReceiver] OnSensorData called!");
-        try
+        mainThread.Post(_ =>
         {
-            var payload = response.GetValue<SensorDataPayload>(0);
-            if (payload == null) return System.Threading.Tasks.Task.CompletedTask;
-
-            onSensorDataReceived?.Invoke(payload);
-
-            switch (payload.role)
+            try
             {
-                case "paddle_right":
-                    onPaddleRightInput?.Invoke(payload.accel);
-                    break;
+                var payload = response.GetValue<SensorDataPayload>(0);
+                if (payload == null) return;
 
-                case "paddle_left":
-                    onPaddleLeftInput?.Invoke(payload.accel);
-                    break;
+                onSensorDataReceived?.Invoke(payload);
 
-                case "fisher":
-                    onFisherInput?.Invoke(payload);
-                    break;
+                switch (payload.role)
+                {
+                    case "paddle_right":
+                        onPaddleRightInput?.Invoke(payload.accel);
+                        break;
+
+                    case "paddle_left":
+                        onPaddleLeftInput?.Invoke(payload.accel);
+                        break;
+
+                    case "fisher":
+                        onFisherInput?.Invoke(payload);
+                        break;
+                }
             }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"[SensorDataReceiver] パースエラー: {e.Message}");
-        }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[SensorDataReceiver] パースエラー: {e.Message}");
+            }
+        }, null);
         return System.Threading.Tasks.Task.CompletedTask;
     }
 }
