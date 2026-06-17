@@ -15,15 +15,37 @@ public class SensorDataReceiver : MonoBehaviour
     public UnityEvent<AxisData> onPaddleLeftInput;
     public UnityEvent<SensorDataPayload> onFisherInput;
 
-    void OnEnable()
+    void Start()
     {
         var manager = SocketIOManager.Instance;
-        Debug.Log($"[SensorDataReceiver] OnEnable called. manager={(manager != null)}, socket={(manager?.Socket != null)}");
+        Debug.Log($"[SensorDataReceiver] Start called. manager={(manager != null)}, connected={manager?.IsConnected}");
+        if (manager == null)
+        {
+            Debug.LogError("[SensorDataReceiver] SocketIOManager.Instance is null");
+            return;
+        }
+
+        if (manager.IsConnected && manager.Socket != null)
+        {
+            manager.Socket.On("sensor:data", OnSensorData);
+            Debug.Log("[SensorDataReceiver] Registered sensor:data callback (direct)");
+        }
+        else
+        {
+            manager.OnConnected += RegisterSensorHandler;
+            Debug.Log("[SensorDataReceiver] Waiting for connection to register callback");
+        }
+    }
+
+    void RegisterSensorHandler()
+    {
+        var manager = SocketIOManager.Instance;
         if (manager?.Socket != null)
         {
             manager.Socket.On("sensor:data", OnSensorData);
-            Debug.Log("[SensorDataReceiver] Registered sensor:data callback");
+            Debug.Log("[SensorDataReceiver] Registered sensor:data callback (deferred)");
         }
+        manager.OnConnected -= RegisterSensorHandler;
     }
 
     System.Threading.Tasks.Task OnSensorData(IEventContext response)
