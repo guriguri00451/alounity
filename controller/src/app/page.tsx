@@ -1,16 +1,55 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PermissionRequest } from "@/components/PermissionRequest";
+import { RoleSelector } from "@/components/RoleSelector";
 import { SensorDisplay } from "@/components/SensorDisplay";
 import { useDeviceMotion } from "@/hooks/useDeviceMotion";
+import { useSocket } from "@/hooks/useSocket";
+import type { PlayerRole } from "@/lib/types";
 
 export default function Home() {
+  const [role, setRole] = useState<PlayerRole | null>(null);
   const [hasPermission, setHasPermission] = useState(false);
   const [isListening, setIsListening] = useState(false);
+
   const { sensorData, isSupported, startListening, stopListening } = useDeviceMotion({
-    throttleMs: 33, // 30fps
+    throttleMs: 33,
   });
+
+  const { isConnected, playerId, connectionError, sendSensorData } = useSocket({
+    role: role ?? "paddle_right",
+    autoConnect: role !== null,
+  });
+
+  useEffect(() => {
+    if (!sensorData || !isListening || !isConnected) return;
+
+    sendSensorData({
+      accel: sensorData.acceleration
+        ? {
+            x: sensorData.acceleration.x ?? 0,
+            y: sensorData.acceleration.y ?? 0,
+            z: sensorData.acceleration.z ?? 0,
+          }
+        : null,
+      rotation: sensorData.rotationRate
+        ? {
+            alpha: sensorData.rotationRate.alpha ?? 0,
+            beta: sensorData.rotationRate.beta ?? 0,
+            gamma: sensorData.rotationRate.gamma ?? 0,
+          }
+        : null,
+      orientation: sensorData.orientation
+        ? {
+            alpha: sensorData.orientation.alpha ?? 0,
+            beta: sensorData.orientation.beta ?? 0,
+            gamma: sensorData.orientation.gamma ?? 0,
+          }
+        : null,
+      timestamp: sensorData.timestamp,
+    });
+  }, [sensorData, isListening, isConnected, sendSensorData]);
 
   const handlePermissionGranted = useCallback(() => {
     setHasPermission(true);
@@ -22,7 +61,16 @@ export default function Home() {
     console.log("Permission denied");
   }, []);
 
-  // センサーAPIがサポートされていない場合
+  const handleToggleListening = useCallback(() => {
+    if (isListening) {
+      setIsListening(false);
+      stopListening();
+    } else {
+      setIsListening(true);
+      startListening();
+    }
+  }, [isListening, startListening, stopListening]);
+
   if (!isSupported) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
@@ -39,7 +87,10 @@ export default function Home() {
     );
   }
 
-  // 権限が許可されていない場合
+  if (!role) {
+    return <RoleSelector onSelect={setRole} />;
+  }
+
   if (!hasPermission) {
     return (
       <PermissionRequest
@@ -49,31 +100,47 @@ export default function Home() {
     );
   }
 
-  // メイン画面
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-2xl mx-auto space-y-4">
         <header className="text-center py-4">
           <h1 className="text-2xl font-bold text-gray-800">スマホコントローラー</h1>
-          <p className="text-sm text-gray-600 mt-1">センサーデータをリアルタイムで表示</p>
+          <p className="text-sm text-gray-600 mt-1">センサーデータをリアルタイムで送信</p>
         </header>
 
         <SensorDisplay sensorData={sensorData} />
 
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="bg-white rounded-lg shadow-md p-4 space-y-2">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">センサー状態</h3>
           <div className="text-xs text-gray-600 space-y-1">
             <p>
-              状態: <span className="text-green-600 font-semibold">リッスン中</span>
+              状態:{" "}
+              <span className={`font-semibold ${isListening ? "text-green-600" : "text-gray-500"}`}>
+                {isListening ? "リッスン中" : "停止中"}
+              </span>
             </p>
             <p>スロットル: 30fps (33ms)</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-4 space-y-2">
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">接続状態</h3>
+          <div className="text-xs text-gray-600 space-y-1">
+            <p>
+              Socket.IO:{" "}
+              <span className={`font-semibold ${isConnected ? "text-green-600" : "text-red-500"}`}>
+                {isConnected ? "接続済み" : "未接続"}
+              </span>
+            </p>
+            {playerId && <p>プレイヤーID: {playerId.slice(0, 8)}...</p>}
+            {connectionError && <p className="text-red-500">{connectionError}</p>}
           </div>
         </div>
 
         <div className="text-center pt-4">
           <button
             type="button"
-            onClick={isListening ? stopListening : startListening}
+            onClick={handleToggleListening}
             className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm"
           >
             {isListening ? "センサー停止" : "センサー再開"}
