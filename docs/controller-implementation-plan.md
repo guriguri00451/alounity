@@ -57,7 +57,7 @@ alounity/
 | センサー API | Device Orientation Events（`DeviceMotionEvent` / `DeviceOrientationEvent`） | - |
 | HTTPS | mkcert（ローカル開発用） | - |
 | 言語 | TypeScript | - |
-| Unity Socket.IO | SocketIoClientDotNet | 1.0.8（未導入） |
+| Unity Socket.IO | SocketIOClient (doghappy) | 3.1.2 / 4.0.4 |
 
 ## 通信アーキテクチャ
 
@@ -161,64 +161,54 @@ Unity
 - 接続時にプレイヤーIDを割り当て（UUID）
 - ルーム概念: 同一ルーム内のプレイヤーのセンサーデータをUnityに転送
 
-#### 3-4. Unity側Socket.IOクライアント実装 ⏳ 未着手
+#### 3-4. Unity側Socket.IOクライアント実装 ⏳ 実装済み
 
-**技術選定:** SocketIoClientDotNet（C#製Socket.IOクライアント）
+**技術選定:** SocketIOClient（ https://github.com/doghappy/socket.io-client-csharp ）
 
-**NuGetパッケージ情報:**
-- パッケージID: `SocketIoClientDotNet`
-- 推奨バージョン: `1.0.8`（最新安定版）
-- 依存関係: `WebSocket4Net`, `EngineIoClientDotNet`, `Newtonsoft.Json`
+`SocketIoClientDotNet`（Quobject）は2019年でメンテナンス停止、依存DLLが`.NET Standard 2.0`未対応だったため、現在もメンテナンスが続く`SocketIOClient`（doghappy）に変更。
 
-**選定理由:**
-- Socket.IOプロトコル完全対応（自前実装不要）
-- イベントベースのAPIで直感的
-- ルーム機能対応
-- 自動再接続機能
+**特徴:**
+- Socket.IO v2/v3/v4 完全対応（サーバーv4と一致）
+- .NET Standard 2.0 対応
+- DLL 1つで動作（`SocketIOClient.dll`）
+- デフォルトシリアライザ: System.Text.Json
+- Newtonsoft.Json シリアライザも選択可能（別パッケージ）
 
-**実装内容:**
-- Socket.IOサーバーへの接続
-- `sensor:data`イベントの受信
-- 受信したセンサーデータをゲームオブジェクトに適用
-- 再接続ロジック
-
-**作成ファイル（TBD - 未作成）:**
+**作成ファイル:**
 ```text
 Assets/alounity/
 └── Scripts/
     └── Network/
-        ├── SocketIOManager.cs      # Socket.IO接続管理（Singleton）- TBD
-        └── SensorDataReceiver.cs   # センサーデータ受信・適用 - TBD
+        ├── SocketIOManager.cs      # Socket.IO接続管理（Singleton）
+        ├── SensorDataReceiver.cs   # センサーデータ受信・適用
+        └── SensorDataModels.cs     # データモデル定義
 ```
 
-**注記:** 上記ファイルは現在リポジトリに存在しません。実装時に作成してください。
-- `SocketIOManager.cs`: SingletonパターンでSocket.IO接続を管理、再接続処理を実装
-- `SensorDataReceiver.cs`: `sensor:data`イベントをリッスンし、受信データをゲームロジックに適用
-
-**SocketIoClientDotNetの導入方法:**
-1. NuGetパッケージマネージャーで`SocketIoClientDotNet`をインストール
-2. または、DLLを直接`Assets/Plugins/`に配置
-3. Unity Package Manager (UPM) での導入は公式サポート外（サードパーティラッパーが必要）
+**SocketIOClientの導入方法:**
+1. NuGetから`SocketIOClient`パッケージをダウンロード
+2. `lib/netstandard2.0/SocketIOClient.dll` を `Assets/Plugins/` に配置
+3. Unity Editorをリフレッシュ
 
 **使用例:**
 ```csharp
-using Quobject.SocketIoClientDotNet.Client;
+using SocketIOClient;
 
-var socket = IO.Socket("http://localhost:3000");
-socket.On(Socket.EVENT_CONNECT, () => {
+var socket = new SocketIO("http://localhost:3000");
+socket.OnConnected += async (sender, e) => {
     Debug.Log("Connected to server");
-    socket.Emit("unity:connect", new { roomId = "room1" });
-});
-socket.On("sensor:data", (data) => {
-    Debug.Log($"Received sensor data: {data}");
+    await socket.EmitAsync("unity:connect", new { roomId = "room1" });
+};
+socket.On("sensor:data", response => {
+    var payload = response.GetValue<SensorDataPayload>(0);
     // センサーデータをゲームロジックに適用
 });
+await socket.ConnectAsync();
 ```
 
 **websocket-sharpが非推奨の理由:**
 - Socket.IOプロトコル未対応
-- エンジンIOのハンドシェイク、パケットフォーマット、再接続ロジックなどを自前実装が必要
-- 開発工数が大幅に増加
+- サーバー側に raw WebSocket のエンドポイント追加が必要（工数増）
+- ルーム管理・再接続を自前実装
 
 ### Phase 4: 動作確認・最適化
 
