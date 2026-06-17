@@ -71,6 +71,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimOffsetSetter
   offsetTime: 0.15
+  inputValueThreshold: 0.8
   maxSpeedRate: 1.4
   maxTime: 1
   noInputTimeThreshold: 0.3
@@ -1328,7 +1329,6 @@ MonoBehaviour:
   wheels:
   - {fileID: 3362290935491025881}
   - {fileID: 8791959794245430995}
-  power: 100
   boat:
   - m_UseReference: 1
     m_Action:
@@ -1355,6 +1355,8 @@ MonoBehaviour:
   oarAnim:
   - {fileID: 3853295715153379179}
   - {fileID: 3505946411931753229}
+  inputValueThreshold: 0.3
+  power: 100
 --- !u!1 &6181435908484529296
 GameObject:
   m_ObjectHideFlags: 0
@@ -2085,6 +2087,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimOffsetSetter
   offsetTime: 0
+  inputValueThreshold: 0.8
   maxSpeedRate: 1.4
   maxTime: 1
   noInputTimeThreshold: 0.3
