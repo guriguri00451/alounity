@@ -170,7 +170,8 @@ Unity
 **特徴:**
 - Socket.IO v2/v3/v4 完全対応（サーバーv4と一致）
 - .NET Standard 2.0 対応
-- DLL 1つで動作（`SocketIOClient.dll`）
+- 本体は `SocketIOClient.dll` 1つだが、内部で `Microsoft.Extensions.DependencyInjection` / `System.Text.Json` 等に依存
+- 依存DLLは NuGet から netstandard2.0 版を取得して `Assets/Plugins/` に一括配置が必要（計13ファイル）
 - デフォルトシリアライザ: System.Text.Json
 - Newtonsoft.Json シリアライザも選択可能（別パッケージ）
 
