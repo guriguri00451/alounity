@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { PermissionRequest } from "@/components/PermissionRequest";
 import { RoleSelector } from "@/components/RoleSelector";
+import { SensorDebugOverlay } from "@/components/SensorDebugOverlay";
 import { SensorDisplay } from "@/components/SensorDisplay";
 import { useDeviceMotion } from "@/hooks/useDeviceMotion";
 import { useSocket } from "@/hooks/useSocket";
@@ -102,6 +103,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
+      <SensorDebugOverlay sensorData={sensorData} isConnected={isConnected} role={role} />
       <div className="max-w-2xl mx-auto space-y-4">
         <header className="text-center py-4">
           <h1 className="text-2xl font-bold text-gray-800">スマホコントローラー</h1>

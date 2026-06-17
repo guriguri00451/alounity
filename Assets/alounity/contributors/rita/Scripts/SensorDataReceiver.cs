@@ -1,3 +1,4 @@
+using System.Threading;
 using SocketIOClient;
 using UnityEngine;
 using UnityEngine.Events;
@@ -15,46 +16,74 @@ public class SensorDataReceiver : MonoBehaviour
     public UnityEvent<AxisData> onPaddleLeftInput;
     public UnityEvent<SensorDataPayload> onFisherInput;
 
-    void OnEnable()
+    SynchronizationContext mainThread;
+
+    void Start()
+    {
+        mainThread = SynchronizationContext.Current;
+
+        var manager = SocketIOManager.Instance;
+        Debug.Log($"[SensorDataReceiver] Start called. manager={(manager != null)}, connected={manager?.IsConnected}");
+        if (manager == null)
+        {
+            Debug.LogError("[SensorDataReceiver] SocketIOManager.Instance is null");
+            return;
+        }
+
+        if (manager.IsConnected && manager.Socket != null)
+        {
+            manager.Socket.On("sensor:data", OnSensorData);
+            Debug.Log("[SensorDataReceiver] Registered sensor:data callback (direct)");
+        }
+        else
+        {
+            manager.OnConnected += RegisterSensorHandler;
+            Debug.Log("[SensorDataReceiver] Waiting for connection to register callback");
+        }
+    }
+
+    void RegisterSensorHandler()
     {
         var manager = SocketIOManager.Instance;
-        Debug.Log($"[SensorDataReceiver] OnEnable called. manager={(manager != null)}, socket={(manager?.Socket != null)}");
         if (manager?.Socket != null)
         {
             manager.Socket.On("sensor:data", OnSensorData);
-            Debug.Log("[SensorDataReceiver] Registered sensor:data callback");
+            Debug.Log("[SensorDataReceiver] Registered sensor:data callback (deferred)");
         }
+        manager.OnConnected -= RegisterSensorHandler;
     }
 
     System.Threading.Tasks.Task OnSensorData(IEventContext response)
     {
-        Debug.Log("[SensorDataReceiver] OnSensorData called!");
-        try
+        mainThread.Post(_ =>
         {
-            var payload = response.GetValue<SensorDataPayload>(0);
-            if (payload == null) return System.Threading.Tasks.Task.CompletedTask;
-
-            onSensorDataReceived?.Invoke(payload);
-
-            switch (payload.role)
+            try
             {
-                case "paddle_right":
-                    onPaddleRightInput?.Invoke(payload.accel);
-                    break;
+                var payload = response.GetValue<SensorDataPayload>(0);
+                if (payload == null) return;
 
-                case "paddle_left":
-                    onPaddleLeftInput?.Invoke(payload.accel);
-                    break;
+                onSensorDataReceived?.Invoke(payload);
 
-                case "fisher":
-                    onFisherInput?.Invoke(payload);
-                    break;
+                switch (payload.role)
+                {
+                    case "paddle_right":
+                        onPaddleRightInput?.Invoke(payload.accel);
+                        break;
+
+                    case "paddle_left":
+                        onPaddleLeftInput?.Invoke(payload.accel);
+                        break;
+
+                    case "fisher":
+                        onFisherInput?.Invoke(payload);
+                        break;
+                }
             }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"[SensorDataReceiver] パースエラー: {e.Message}");
-        }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[SensorDataReceiver] パースエラー: {e.Message}");
+            }
+        }, null);
         return System.Threading.Tasks.Task.CompletedTask;
     }
 }

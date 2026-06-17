@@ -57,6 +57,6 @@ public class SensorDebug : MonoBehaviour
 
     void OnFisher(SensorDataPayload data)
     {
-        Debug.Log($"[SensorDebug] 釣り入力: accel=({data.accel.x:F2}, {data.accel.y:F2}, {data.accel.z:F2})");
+        Debug.Log($"[SensorDebug] 釣り入力: alpha={data.orientation.alpha:F1} accel=({data.accel.x:F2}, {data.accel.y:F2}, {data.accel.z:F2})");
     }
 }
