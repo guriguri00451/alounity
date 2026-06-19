@@ -20,6 +20,9 @@ namespace FishRumble
         /// <summary>攻撃がヒットしたときに発火するイベント。引数はダメージを受けたターゲット。</summary>
         public event Action<IDamageable> onAttackHit;
 
+        /// <summary>耐久値が0になったときに発火するイベント。</summary>
+        public event Action onDepleted;
+
         public bool IsDepleted => currentDurability <= 0;
 
         /// <summary>
@@ -38,17 +41,26 @@ namespace FishRumble
         /// </summary>
         public void SetAttackActive(bool value) => isAttackActive = value;
 
-        // 魚のコライダーが相手プレイヤーに衝突したときにダメージを与える。
-        // ※ 魚の GameObject に KayakRider タグを持つ IDamageable コンポーネントが必要。
         private void OnCollisionEnter(Collision collision)
         {
             if (!isAttackActive) return;
-            if (!collision.gameObject.CompareTag("KayakRider")) return;
 
-            if (collision.gameObject.TryGetComponent<IDamageable>(out var target))
+            bool hitPlayer = collision.gameObject.CompareTag("KayakRider");
+            bool hitObstacle = collision.gameObject.CompareTag("Obstacle");
+
+            if (!hitPlayer && !hitObstacle) return;
+
+            if (hitPlayer && collision.gameObject.TryGetComponent<IDamageable>(out var target))
             {
                 target.TakeDamage(swingAttackDamage);
                 onAttackHit?.Invoke(target);
+            }
+
+            TakeDamage(1);
+            if (IsDepleted)
+            {
+                isAttackActive = false;
+                onDepleted?.Invoke();
             }
         }
     }

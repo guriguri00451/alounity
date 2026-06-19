@@ -32,12 +32,10 @@ public class FisherController : MonoBehaviour
     [SerializeField] private float castPower = 10f;
     [SerializeField] private int CatchRequiredShakeCount = 12;
     [SerializeField] private int DropRequiredShakeCount = 5;
-    [SerializeField] private float swingTimeoutSeconds = 1f;
+    [SerializeField] private float minLineLength = 0.5f;
 
 
     private int shakeCount = 0;
-    private int swingCount = 0;
-    private float lastSwingTime = 0f;
     private Fish caughtFish;
     private Hook _hook;
     private Quaternion initialRodRotation;
@@ -171,28 +169,18 @@ public class FisherController : MonoBehaviour
     }
 
     /// <summary>
-    /// 振り回し攻撃。糸を縮めながら魚にダメージを与え、条件を満たしたら魚を落とす。
+    /// 振り回し攻撃。Shakeするたびに糸を縮め、minLineLengthまで巻き取ったらIdleに戻る。
     /// </summary>
     void SwingAttack()
     {
         ShortenLine();
-
-        if (Time.time - lastSwingTime > swingTimeoutSeconds)
-            swingCount = 0;
-        lastSwingTime = Time.time;
-
-        swingCount++;
-
-        if (swingCount >= DropRequiredShakeCount)
-        {
+        if (lineSpringJoint.maxDistance <= minLineLength)
             ManageState(FisherState.Idle);
-        }
-
-        
     }
+
     void ShortenLine()
     {
-        lineSpringJoint.maxDistance = Mathf.Max(0.5f, lineSpringJoint.maxDistance - 0.5f);
+        lineSpringJoint.maxDistance = Mathf.Max(minLineLength, lineSpringJoint.maxDistance - 0.5f);
     }
 
     void CatchFish(Fish fish)
