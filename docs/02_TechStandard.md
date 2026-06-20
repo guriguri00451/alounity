@@ -83,7 +83,7 @@ Assets/alounity/
 
 ## 5. スマホ通信方針
 * **通信方式:** Socket.IO (WebSocket + polling フォールバック)
-* **通信方向:** スマホ → Unity（PC）の **一方向** 送信のみ
+* **通信方向:** スマホとUnity（PC）間のSocket.IOによる双方向リアルタイム通信
 * **送信データ:** 加速度センサー（DeviceMotionEvent）・方位磁針（DeviceOrientationEvent）
 * **スロットリング:** 30fps（33ms間隔）でネットワーク負荷を抑制
 * **スマホ側:** ブラウザベース（追加アプリ不要）
