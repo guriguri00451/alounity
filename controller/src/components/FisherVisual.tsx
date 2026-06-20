@@ -9,7 +9,7 @@ interface FisherVisualProps {
   team: Team;
 }
 
-const SWING_THRESHOLD = 30;
+const SWING_THRESHOLD = 100;
 const POWER_HOLD_DURATION = 800;
 
 type RodState = "idle" | "casting" | "reeling";
@@ -19,16 +19,14 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
   const [lastStateChange, setLastStateChange] = useState(0);
   const [displayedPower, setDisplayedPower] = useState(0);
   const powerHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wasAboveThresholdRef = useRef(false);
 
-  const { swingForce, zAccel } = useMemo(() => {
-    if (!sensorData?.acceleration) return { swingForce: 0, zAccel: 0 };
-    const { x, y, z } = sensorData.acceleration;
-    const zVal = z ?? 0;
-    const force = Math.sqrt((x ?? 0) ** 2 + (y ?? 0) ** 2 + zVal ** 2);
-    return { swingForce: force, zAccel: zVal };
+  const { rotationAlpha, absRotation } = useMemo(() => {
+    const alpha = sensorData?.rotationRate?.alpha ?? 0;
+    return { rotationAlpha: alpha, absRotation: Math.abs(alpha) };
   }, [sensorData]);
 
-  const normalizedForce = Math.min(Math.max((swingForce - SWING_THRESHOLD) / 15, 0), 1);
+  const normalizedForce = Math.min(Math.max((absRotation - SWING_THRESHOLD) / 100, 0), 1);
 
   useEffect(() => {
     setDisplayedPower((prev) => Math.max(prev, normalizedForce));
@@ -55,11 +53,13 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
     const now = Date.now();
     if (now - lastStateChange < 300) return;
 
-    if (swingForce > SWING_THRESHOLD) {
-      if (zAccel > SWING_THRESHOLD * 0.5) {
+    const isAboveThreshold = absRotation > SWING_THRESHOLD;
+
+    if (isAboveThreshold && !wasAboveThresholdRef.current) {
+      if (rotationAlpha < -SWING_THRESHOLD) {
         setRodState("casting");
         setLastStateChange(now);
-      } else if (zAccel < -SWING_THRESHOLD * 0.5) {
+      } else if (rotationAlpha > SWING_THRESHOLD) {
         setRodState("reeling");
         setLastStateChange(now);
       }
@@ -67,7 +67,9 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
       setRodState("idle");
       setLastStateChange(now);
     }
-  }, [swingForce, zAccel, rodState, lastStateChange]);
+
+    wasAboveThresholdRef.current = isAboveThreshold;
+  }, [absRotation, rotationAlpha, rodState, lastStateChange]);
 
   const teamColor = team === "A" ? "#3B82F6" : "#EF4444";
   const teamColorLight = team === "A" ? "#93C5FD" : "#FCA5A5";
