@@ -32,10 +32,10 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
     if (now - lastStateChange < 300) return;
 
     if (swingForce > SWING_THRESHOLD) {
-      if (zAccel < -SWING_THRESHOLD * 0.5) {
+      if (zAccel > SWING_THRESHOLD * 0.5) {
         setRodState("casting");
         setLastStateChange(now);
-      } else if (zAccel > SWING_THRESHOLD * 0.5) {
+      } else if (zAccel < -SWING_THRESHOLD * 0.5) {
         setRodState("reeling");
         setLastStateChange(now);
       }
