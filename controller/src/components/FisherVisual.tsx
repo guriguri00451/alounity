@@ -9,7 +9,7 @@ interface FisherVisualProps {
   team: Team;
 }
 
-const SWING_THRESHOLD = 5;
+const SWING_THRESHOLD = 30;
 
 type RodState = "idle" | "casting" | "reeling";
 
