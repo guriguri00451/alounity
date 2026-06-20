@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using FishRumble;
 using Cysharp.Threading.Tasks;
+using System.Threading;
+using System.Threading.Tasks;
 
 /// <summary>
 /// 釣り人のステートマシンを管理する。
@@ -21,24 +23,33 @@ public class FisherController : MonoBehaviour
     [SerializeField] private float horizontalInput;
 
     [Header("Settings")]
+    [SerializeField] private GameObject fishPrefab;
     [SerializeField] private FishRumbleInput input;
     [SerializeField] private bool isDebugMode = false;
 
-    [Header("Parameters")]
+    [Header("FishRodParams")]
     [SerializeField] private float rodRotationSpeed = 5f;
     [SerializeField] private float rodMinRotation = -45f;
     [SerializeField] private float rodMaxRotation = 45f;
     [SerializeField] private FisherState currentState = FisherState.Idle;
     [SerializeField] private float castPower = 10f;
     [SerializeField] private int CatchRequiredShakeCount = 12;
-    [SerializeField] private int DropRequiredShakeCount = 5;
-    [SerializeField] private float minLineLength = 0.5f;
+    [Header("AttackParams")]
+    [SerializeField] private float fishAcceraratePower;
+    [SerializeField] private float smallAttackPowerThresholdValue;
+    [SerializeField] private float middleAttackPowerThresholdValue;
+    [SerializeField] private float bigAttackPowerThresholdValue;
+    [SerializeField] private int swingFinishTimeMs = 1200;
+    [SerializeField] private float swingCoolTime = 3f;
 
 
     private int shakeCount = 0;
     private Fish caughtFish;
     private Hook _hook;
     private Quaternion initialRodRotation;
+    private float swingCoolTimer;
+    private bool isAbleCatch;
+    private bool isSwinging;
 
     void Start()
     {
@@ -51,7 +62,7 @@ public class FisherController : MonoBehaviour
     {
         hookRigidbody = hookTransform.GetComponent<Rigidbody>();
         _hook = hookTransform.GetComponent<Hook>();
-        _hook.onFishSpawned += CatchFish;
+        _hook.onAbleCatch += AbleCatch;
     }
 
     void Update()
@@ -60,7 +71,6 @@ public class FisherController : MonoBehaviour
         {
             if (Keyboard.current.digit1Key.wasPressedThisFrame) ManageState(FisherState.Idle);
             if (Keyboard.current.digit2Key.wasPressedThisFrame) ManageState(FisherState.Waiting);
-            if (Keyboard.current.digit3Key.wasPressedThisFrame) ManageState(FisherState.Catching);
             if (Keyboard.current.digit4Key.wasPressedThisFrame) ManageState(FisherState.Swinging);
         }
         RotateRod();
@@ -71,6 +81,7 @@ public class FisherController : MonoBehaviour
         input = new FishRumbleInput();
 
         input.Player.Cast.performed += Cast;
+        input.Player.Reel.performed += Reel;
         input.Player.Shake.performed += Shake;
 
         input.Enable();
@@ -105,21 +116,19 @@ public class FisherController : MonoBehaviour
         Debug.Log($"State changed: {currentState} -> {newState}");
         currentState = newState;
 
-        springJointConfig.Get(currentState).ApplyTo(lineSpringJoint);
+        springJointConfig.GetFromState(currentState).ApplyTo(lineSpringJoint);
 
         switch (newState)
         {
             case FisherState.Idle:
-                
+                hookRigidbody.linearVelocity = Vector3.zero;
+                hookRigidbody.angularVelocity = Vector3.zero;
                 break;
             case FisherState.Waiting:
                 _hook.Release();
                 break;
-            case FisherState.Catching:
-                if(caughtFish == null) break;
-                _hook.CatchFish(caughtFish.transform);
-                break;
             case FisherState.Swinging:
+                CatchFish();
                 _hook.Release();
                 caughtFish.Initialize();
                 caughtFish.SetAttackActive(true);
@@ -132,59 +141,123 @@ public class FisherController : MonoBehaviour
     /// </summary>
     void Cast(InputAction.CallbackContext context)
     {
+        Debug.Log("投げる");
         if (currentState != FisherState.Idle) return;
         ManageState(FisherState.Waiting);
+        hookRigidbody.isKinematic = true;
+        hookTransform.position = Vector3.zero;
+        hookRigidbody.isKinematic = false;
         hookRigidbody.AddForce(this.transform.forward * castPower, ForceMode.Impulse);
     }
 
-    /// <summary>
-    /// スマホを振る動作に対応する入力コールバック。
-    /// Catching 中は糸を巻き上げ、Swinging 中は振り回し攻撃を行う。
-    /// </summary>
-    void Shake(InputAction.CallbackContext input)
+    void Reel(InputAction.CallbackContext context)
     {
-        if (currentState == FisherState.Catching)
-            PullingLine();
-        else if (currentState == FisherState.Waiting ||currentState == FisherState.Swinging)
-            SwingAttack(input);
-    }
+        Debug.Log("引きつける");
+        if (currentState != FisherState.Waiting) return;
 
-    /// <summary>
-    /// 糸を巻く。規定回数に達したら Swinging へ遷移する。
-    /// </summary>
-    void PullingLine()
-    {
-        shakeCount++;
-        if (shakeCount >= CatchRequiredShakeCount)
+        if(isAbleCatch)
         {
-            shakeCount = 0;
             ManageState(FisherState.Swinging);
+        }
+        else
+        {
+            ManageState(FisherState.Idle);
         }
     }
 
     /// <summary>
+    /// スマホを振る動作に対応する入力コールバック。
+    /// Swinging 中は振り回し攻撃を行う。
+    /// </summary>
+    void Shake(InputAction.CallbackContext input)
+    {
+        if (currentState == FisherState.Swinging)
+            SwingAttack(input);
+    }
+
+
+    /// <summary>
     /// 振り回し攻撃。Shakeするたびに糸を縮め、minLineLengthまで巻き取ったらIdleに戻る。
     /// </summary>
-    void SwingAttack(InputAction.CallbackContext _input)
+    async void SwingAttack(InputAction.CallbackContext _input)
     {
-        ShortenLine();
-        if (lineSpringJoint.maxDistance <= minLineLength)
-            ManageState(FisherState.Idle);
+        if(isSwinging || SwingCoolTimer()) return;
+
+        Debug.Log("Swing");
+        isSwinging = true;
+        float inputValue = _input.ReadValue<float>();
+        if(bigAttackPowerThresholdValue < inputValue)
+        {
+            springJointConfig.GetFromAttack(2).ApplyTo(lineSpringJoint);
+        }
+        else
+        if(middleAttackPowerThresholdValue < inputValue)
+        {
+            springJointConfig.GetFromAttack(1).ApplyTo(lineSpringJoint);
+        }
+        else
+        if(smallAttackPowerThresholdValue < inputValue)
+        {
+            springJointConfig.GetFromAttack(0).ApplyTo(lineSpringJoint);
+        }
+
+        //Hookの加速
+        Vector3 _myPos = this.transform.position;
+        Vector3 _hookPos = hookTransform.transform.position;
+
+        Vector3 meToFishVector = _hookPos - _myPos;
+        meToFishVector.y = 0f;
+
+        hookRigidbody.isKinematic = true;
+        hookRigidbody.isKinematic = false;
+
+        Vector3 attackForce = Quaternion.Euler(0f, 45f, 0f) * meToFishVector.normalized * fishAcceraratePower;
+        hookRigidbody.AddForce(attackForce, ForceMode.Impulse);
+
+        //待機
+        await UniTask.Delay(swingFinishTimeMs);
+
+        //元の長さに戻す
+        springJointConfig.GetFromState(FisherState.Swinging).ApplyTo(lineSpringJoint);
+        hookRigidbody.isKinematic = true;
+        hookRigidbody.isKinematic = false;
+        isSwinging = false;
     }
 
-    void ShortenLine()
+    bool SwingCoolTimer()
     {
-        lineSpringJoint.maxDistance = Mathf.Max(minLineLength, lineSpringJoint.maxDistance - 0.5f);
+        swingCoolTimer = Time.deltaTime;
+        float beforeTime = Time.deltaTime - swingCoolTimer;
+
+        if(beforeTime > swingCoolTime) 
+        {
+            swingCoolTime = 0;
+            return true;
+        }
+
+        return false;
     }
 
-    void CatchFish(Fish fish)
-    {
-        if (currentState != FisherState.Waiting) return;
 
-        ManageState(FisherState.Catching);
+    void CatchFish()
+    {
+        if (currentState != FisherState.Waiting && caughtFish != null) return;
+
+        hookRigidbody.isKinematic = true;
+        Fish fish = Instantiate(fishPrefab,hookTransform).GetComponent<Fish>();
         _hook.CatchFish(fish.transform);
         caughtFish = fish.GetComponent<Fish>();
         caughtFish.onDepleted += DropFish;
+        hookRigidbody.isKinematic = false;
+    }
+
+    void AbleCatch()
+    {
+        isAbleCatch = true;
+    }
+    void UnableCatch()
+    {
+        isAbleCatch = false;
     }
 
     void DropFish()
@@ -194,6 +267,5 @@ public class FisherController : MonoBehaviour
             caughtFish.SetAttackActive(false);
         caughtFish = null;
         _hook.ReleaseFish();
-
     }
 }

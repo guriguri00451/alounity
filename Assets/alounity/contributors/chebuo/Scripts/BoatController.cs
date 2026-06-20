@@ -11,8 +11,8 @@ public class BoatController : MonoBehaviour
     [Header("Parametor")]
     [SerializeField] float driveValueThreshold = 0.8f;
     [SerializeField] float breakValueThreshold = 0.2f;
-    [SerializeField] float power=100;
-    [SerializeField] float breakPower = 100;
+    [SerializeField] float power = 30;
+    [SerializeField] float breakPower = 30;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {

@@ -136,6 +136,15 @@ public partial class @FishRumbleInput: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Reel"",
+                    ""type"": ""Button"",
+                    ""id"": ""a1b2c3d4-e5f6-a7b8-c9d0-e1f2a3b4c5d6"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -292,6 +301,28 @@ public partial class @FishRumbleInput: IInputActionCollection2, IDisposable
                     ""action"": ""Shake"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b2c3d4e5-f6a7-b8c9-d0e1-f2a3b4c5d6e7"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Reel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c3d4e5f6-a7b8-c9d0-e1f2-a3b4c5d6e7f8"",
+                    ""path"": ""<SmartphoneDevice>/reel"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Reel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -305,6 +336,7 @@ public partial class @FishRumbleInput: IInputActionCollection2, IDisposable
         m_Player_Shake = m_Player.FindAction("Shake", throwIfNotFound: true);
         m_Player_BoatL = m_Player.FindAction("BoatL", throwIfNotFound: true);
         m_Player_BoatR = m_Player.FindAction("BoatR", throwIfNotFound: true);
+        m_Player_Reel = m_Player.FindAction("Reel", throwIfNotFound: true);
     }
 
     ~@FishRumbleInput()
@@ -390,6 +422,7 @@ public partial class @FishRumbleInput: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Shake;
     private readonly InputAction m_Player_BoatL;
     private readonly InputAction m_Player_BoatR;
+    private readonly InputAction m_Player_Reel;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -421,6 +454,10 @@ public partial class @FishRumbleInput: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/BoatR".
         /// </summary>
         public InputAction @BoatR => m_Wrapper.m_Player_BoatR;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Reel".
+        /// </summary>
+        public InputAction @Reel => m_Wrapper.m_Player_Reel;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -462,6 +499,9 @@ public partial class @FishRumbleInput: IInputActionCollection2, IDisposable
             @BoatR.started += instance.OnBoatR;
             @BoatR.performed += instance.OnBoatR;
             @BoatR.canceled += instance.OnBoatR;
+            @Reel.started += instance.OnReel;
+            @Reel.performed += instance.OnReel;
+            @Reel.canceled += instance.OnReel;
         }
 
         /// <summary>
@@ -488,6 +528,9 @@ public partial class @FishRumbleInput: IInputActionCollection2, IDisposable
             @BoatR.started -= instance.OnBoatR;
             @BoatR.performed -= instance.OnBoatR;
             @BoatR.canceled -= instance.OnBoatR;
+            @Reel.started -= instance.OnReel;
+            @Reel.performed -= instance.OnReel;
+            @Reel.canceled -= instance.OnReel;
         }
 
         /// <summary>
@@ -563,5 +606,12 @@ public partial class @FishRumbleInput: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnBoatR(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Reel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnReel(InputAction.CallbackContext context);
     }
 }

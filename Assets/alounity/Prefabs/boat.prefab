@@ -810,7 +810,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Hook
   lineAttachPoint: {fileID: 4906490513593294807}
-  fishPrefab: {fileID: 8585306600659894571, guid: ef6bc5c01679b440099e341aefb4face, type: 3}
 --- !u!135 &7823550431784627611
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1133,17 +1132,20 @@ MonoBehaviour:
   lineSpringJoint: {fileID: 7421196942546889635}
   springJointConfig: {fileID: 11400000, guid: 3637ec06e3f8f4414a102ba8c3a606b0, type: 2}
   horizontalInput: 0
+  fishPrefab: {fileID: 8585306600659894571, guid: ef6bc5c01679b440099e341aefb4face, type: 3}
   isDebugMode: 1
   rodRotationSpeed: 200
   rodMinRotation: -45
   rodMaxRotation: 45
   currentState: 0
-  castPower: 10
+  castPower: 0.1
   CatchRequiredShakeCount: 12
-  fishAcceraratePower: 0
-  smallAttackPowerThresholdValue: 0
-  middleAttackPowerThresholdValue: 0
-  bigAttackPowerThresholdValue: 0
+  fishAcceraratePower: 0.5
+  smallAttackPowerThresholdValue: 0.3
+  middleAttackPowerThresholdValue: 0.6
+  bigAttackPowerThresholdValue: 0.7
+  swingFinishTimeMs: 1200
+  swingCoolTime: 3
 --- !u!1 &3558500417900078302
 GameObject:
   m_ObjectHideFlags: 0

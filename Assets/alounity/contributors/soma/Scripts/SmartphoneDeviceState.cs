@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.Utilities;
 /// SmartphoneDevice の入力状態を表すストラクト。
 /// Socket.IO 経由で受け取ったセンサーデータをフィールドとして保持する。
 /// </summary>
-[StructLayout(LayoutKind.Explicit, Size = 20)]
+[StructLayout(LayoutKind.Explicit, Size = 24)]
 public struct SmartphoneDeviceState : IInputStateTypeInfo
 {
     public static FourCC Format => new FourCC('S', 'M', 'P', 'H');
@@ -25,11 +25,15 @@ public struct SmartphoneDeviceState : IInputStateTypeInfo
     [InputControl(name = "rotate", layout = "Axis", format = "FLT")]
     [FieldOffset(8)] public float rotate;
 
-    /// <summary>キャストジェスチャーの強度（0〜1。0.5 を超えると Button として発火）</summary>
+    /// <summary>キャストジェスチャーの強度（0〜1。前方への振り、rotation.beta が負のとき増加）</summary>
     [InputControl(name = "cast", layout = "Axis", format = "FLT")]
     [FieldOffset(12)] public float cast;
 
     /// <summary>シェイクジェスチャーの強度（0〜1。0.5 を超えると Button として発火）</summary>
     [InputControl(name = "shake", layout = "Axis", format = "FLT")]
     [FieldOffset(16)] public float shake;
+
+    /// <summary>リールジェスチャーの強度（0〜1。手前への引き、rotation.beta が正のとき増加）</summary>
+    [InputControl(name = "reel", layout = "Axis", format = "FLT")]
+    [FieldOffset(20)] public float reel;
 }

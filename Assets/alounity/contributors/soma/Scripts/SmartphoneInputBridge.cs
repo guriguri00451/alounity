@@ -17,7 +17,7 @@ public class SmartphoneInputBridge : MonoBehaviour
 
     // 左右オール：この加速度（m/s²）で float 値が 1.0 になる
     const float PaddleMaxAccel = 9.8f;
-    // キャスト：この角速度（deg/s）で float 値が 1.0 になる
+    // キャスト/リール：この角速度（deg/s）で float 値が 1.0 になる
     const float CastMaxRotation = 180f;
     // シェイク：この角速度（deg/s）で float 値が 1.0 になる
     const float ShakeMaxRotation = 360f;
@@ -73,8 +73,9 @@ public class SmartphoneInputBridge : MonoBehaviour
         }
         if (data.rotation != null)
         {
-            // beta（前後傾き角速度）をキャストに使う
-            currentState.cast = Normalize(Mathf.Abs(data.rotation.beta), CastMaxRotation);
+            // beta が負（前方への振り）→ Cast、正（手前への引き）→ Reel
+            currentState.cast = Normalize(Mathf.Max(0f, -data.rotation.beta), CastMaxRotation);
+            currentState.reel = Normalize(Mathf.Max(0f, data.rotation.beta), CastMaxRotation);
             // alpha（横傾き角速度）をシェイクに使う
             currentState.shake = Normalize(Mathf.Abs(data.rotation.alpha), ShakeMaxRotation);
         }

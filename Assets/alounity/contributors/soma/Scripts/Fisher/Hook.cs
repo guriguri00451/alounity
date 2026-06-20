@@ -48,7 +48,6 @@ public class Hook : MonoBehaviour
     /// <param name="fish"></param>
     public void CatchFish(Transform fish)
     {
-        MakeLockState(true);
         caughtFish = fish;
         caughtFish.SetParent(this.transform);
     }
@@ -73,20 +72,14 @@ public class Hook : MonoBehaviour
     {
         MakeFreeState();
     }
-    [SerializeField] private GameObject fishPrefab;
-    public Action<Fish> onFishSpawned;
+    public Action onAbleCatch;
+    public Action onUnableCatch;
 
     void OnTriggerEnter(Collider other)
     {
         if(caughtFish != null) return;
 
         if(!other.gameObject.CompareTag("FishZone")) return;
-        Fish fish = SpawnFish(transform.position);
-        onFishSpawned?.Invoke(fish);
-        
-    }
-    public Fish SpawnFish(Vector3 position)
-    {
-        return Instantiate(fishPrefab, position, Quaternion.identity).GetComponent<Fish>();
+        onAbleCatch?.Invoke();
     }
 }
