@@ -7,9 +7,10 @@ import { PermissionRequest } from "@/components/PermissionRequest";
 import { RoleSelector } from "@/components/RoleSelector";
 import { SensorDebugOverlay } from "@/components/SensorDebugOverlay";
 import { SensorDisplay } from "@/components/SensorDisplay";
+import { TeamSelector } from "@/components/TeamSelector";
 import { useDeviceMotion } from "@/hooks/useDeviceMotion";
 import { useSocket } from "@/hooks/useSocket";
-import type { PlayerRole } from "@/lib/types";
+import type { GameMode, PlayerInfo, PlayerRole, Team } from "@/lib/types";
 
 const ALL_ROLES: PlayerRole[] = ["paddle_right", "paddle_left", "fisher"];
 
@@ -17,11 +18,13 @@ export default function RoomPage() {
   const params = useParams();
   const roomId = typeof params.roomId === "string" ? params.roomId : "";
 
+  const [team, setTeam] = useState<Team | null>(null);
   const [role, setRole] = useState<PlayerRole | null>(null);
   const [hasPermission, setHasPermission] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [takenRoles, setTakenRoles] = useState<PlayerRole[]>([]);
+  const [players, setPlayers] = useState<PlayerInfo[]>([]);
   const [rolesLoading, setRolesLoading] = useState(true);
+  const [gameMode, setGameMode] = useState<GameMode>("single");
 
   const { sensorData, isSupported, startListening, stopListening } = useDeviceMotion({
     throttleMs: 33,
@@ -30,12 +33,24 @@ export default function RoomPage() {
   const { isConnected, playerId, connectionError, sendSensorData } = useSocket({
     roomId,
     role: role ?? "paddle_right",
-    autoConnect: role !== null,
+    team: team ?? "A",
+    autoConnect: role !== null && team !== null,
   });
 
-  // 役割の占有状態をリアルタイム取得（役割選択前のみ接続）
+  // takenRoles（チーム別）からplayersを構築
+  const setTakenRolesFromData = useCallback((takenRoles: Record<string, string[]>) => {
+    const playerList: PlayerInfo[] = [];
+    for (const [t, roles] of Object.entries(takenRoles)) {
+      for (const r of roles) {
+        playerList.push({ playerId: "", role: r as PlayerRole, team: t as Team });
+      }
+    }
+    setPlayers(playerList);
+  }, []);
+
+  // ルーム情報をリアルタイム取得（チーム・役割選択前のみ接続）
   useEffect(() => {
-    if (!roomId || role) return;
+    if (!roomId || (role && team)) return;
 
     const serverUrl = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
     const socket = io(serverUrl, {
@@ -56,15 +71,15 @@ export default function RoomPage() {
       clearTimeout(timeout);
       setRolesLoading(false);
 
-      if (data.exists && data.takenRoles) {
-        setTakenRoles(data.takenRoles as PlayerRole[]);
+      if (data.exists) {
+        if (data.gameMode) setGameMode(data.gameMode as GameMode);
+        if (data.takenRoles) setTakenRolesFromData(data.takenRoles);
       }
     });
 
-    // リアルタイム更新：他のプレイヤーが参加/退出した際に役割状態を更新
     socket.on("room:players_update", (data) => {
-      if (data.takenRoles) {
-        setTakenRoles(data.takenRoles as PlayerRole[]);
+      if (data.players) {
+        setPlayers(data.players as PlayerInfo[]);
       }
     });
 
@@ -78,7 +93,7 @@ export default function RoomPage() {
       clearTimeout(timeout);
       socket.disconnect();
     };
-  }, [roomId, role]);
+  }, [roomId, role, team, setTakenRolesFromData]);
 
   // 接続エラー時に役割選択画面に戻る
   useEffect(() => {
@@ -136,6 +151,16 @@ export default function RoomPage() {
     }
   }, [isListening, startListening, stopListening]);
 
+  // 現在のチームで占有されている役割
+  const takenRolesInTeam = players.filter((p) => p.team === (team ?? "A")).map((p) => p.role);
+
+  // チーム別の占有数
+  const teamACount = players.filter((p) => p.team === "A").length;
+  const teamBCount = players.filter((p) => p.team === "B").length;
+  const disabledTeams: Team[] = [];
+  if (teamACount >= ALL_ROLES.length) disabledTeams.push("A");
+  if (teamBCount >= ALL_ROLES.length) disabledTeams.push("B");
+
   if (!isSupported) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
@@ -152,33 +177,50 @@ export default function RoomPage() {
     );
   }
 
-  if (!role) {
-    if (rolesLoading) {
+  if (rolesLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-b from-blue-50 to-blue-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">ルーム情報を取得中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // versus モードの場合はチーム選択が必要
+  if (gameMode === "versus" && !team) {
+    const allFull = disabledTeams.length >= 2;
+    if (allFull) {
       return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-b from-blue-50 to-blue-100">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">ルーム情報を取得中...</p>
+          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">満席です</h1>
+            <p className="text-gray-700">両チームとも満席です。別のルームに参加してください。</p>
           </div>
         </div>
       );
     }
+    return <TeamSelector onSelect={setTeam} disabledTeams={disabledTeams} />;
+  }
 
-    const allTaken = takenRoles.length >= ALL_ROLES.length;
+  // 役割選択
+  if (!role) {
+    const currentTeam = team ?? "A";
+    const allTaken = takenRolesInTeam.length >= ALL_ROLES.length;
     if (allTaken) {
       return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-b from-blue-50 to-blue-100">
           <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
             <h1 className="text-2xl font-bold text-red-600 mb-4">満席です</h1>
             <p className="text-gray-700">
-              このルームは全ての役割が使用中です。別のルームに参加するか、しばらく待ってから再度お試しください。
+              {currentTeam === "A" ? "チームA" : "チームB"}は全ての役割が使用中です。
             </p>
           </div>
         </div>
       );
     }
-
-    return <RoleSelector onSelect={setRole} disabledRoles={takenRoles} />;
+    return <RoleSelector onSelect={setRole} disabledRoles={takenRolesInTeam} team={currentTeam} />;
   }
 
   if (!hasPermission) {
@@ -198,6 +240,11 @@ export default function RoomPage() {
           <h1 className="text-2xl font-bold text-gray-800">スマホコントローラー</h1>
           <p className="text-sm text-gray-600 mt-1">
             ルーム: <span className="font-mono font-bold tracking-wider">{roomId}</span>
+            {gameMode === "versus" && (
+              <span className={`ml-2 font-bold ${team === "A" ? "text-blue-600" : "text-red-600"}`}>
+                {team === "A" ? "チームA" : "チームB"}
+              </span>
+            )}
           </p>
         </header>
 
@@ -222,6 +269,16 @@ export default function RoomPage() {
             <p>
               ルーム: <span className="font-mono font-semibold text-gray-800">{roomId}</span>
             </p>
+            {gameMode === "versus" && (
+              <p>
+                チーム:{" "}
+                <span
+                  className={`font-semibold ${team === "A" ? "text-blue-600" : "text-red-600"}`}
+                >
+                  {team === "A" ? "チームA" : "チームB"}
+                </span>
+              </p>
+            )}
             <p>
               Socket.IO:{" "}
               <span className={`font-semibold ${isConnected ? "text-green-600" : "text-red-500"}`}>

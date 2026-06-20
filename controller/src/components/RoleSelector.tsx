@@ -1,20 +1,24 @@
 "use client";
 
-import type { PlayerRole } from "@/lib/types";
+import type { PlayerRole, Team } from "@/lib/types";
 import { PLAYER_ROLES } from "@/lib/types";
 
 interface RoleSelectorProps {
   onSelect: (role: PlayerRole) => void;
   disabledRoles?: PlayerRole[];
+  team: Team;
 }
 
-export function RoleSelector({ onSelect, disabledRoles = [] }: RoleSelectorProps) {
+export function RoleSelector({ onSelect, disabledRoles = [], team }: RoleSelectorProps) {
+  const teamLabel = team === "A" ? "チームA" : "チームB";
+  const teamColor = team === "A" ? "text-blue-600" : "text-red-600";
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-b from-blue-50 to-blue-100">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">カヤックコントローラー</h1>
-          <p className="text-gray-600 text-sm">役割を選択してください</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">役割を選択</h1>
+          <p className={`text-sm font-semibold ${teamColor}`}>{teamLabel}</p>
         </div>
 
         <div className="space-y-4">

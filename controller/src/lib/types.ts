@@ -1,5 +1,9 @@
 export type PlayerRole = "paddle_right" | "paddle_left" | "fisher";
 
+export type Team = "A" | "B";
+
+export type GameMode = "single" | "versus";
+
 export const PLAYER_ROLES: { value: PlayerRole; label: string; description: string }[] = [
   {
     value: "paddle_right",
@@ -16,6 +20,11 @@ export const PLAYER_ROLES: { value: PlayerRole; label: string; description: stri
     label: "釣り",
     description: "スマホを向けて狙い、キャスト/引き上げ",
   },
+];
+
+export const TEAMS: { value: Team; label: string; color: string }[] = [
+  { value: "A", label: "チームA", color: "blue" },
+  { value: "B", label: "チームB", color: "red" },
 ];
 
 export interface AccelData {
@@ -46,11 +55,13 @@ export interface SensorPayload {
 export interface ControllerConnectPayload {
   roomId?: string;
   role: PlayerRole;
+  team: Team;
 }
 
 export interface ControllerSensorPayload {
   roomId?: string;
   role: PlayerRole;
+  team: Team;
   accel: AccelData | null;
   rotation: RotationData | null;
   orientation: OrientationData | null;
@@ -61,4 +72,10 @@ export interface ServerAckPayload {
   received: boolean;
   playerId?: string;
   error?: string;
+}
+
+export interface PlayerInfo {
+  playerId: string;
+  role: PlayerRole;
+  team: Team;
 }

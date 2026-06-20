@@ -5,6 +5,7 @@ public class SensorDataPayload
 {
     public string playerId { get; set; }
     public string role { get; set; }
+    public string team { get; set; }
     public AxisData accel { get; set; }
     public RotationData rotation { get; set; }
     public OrientationData orientation { get; set; }
@@ -48,5 +49,6 @@ public class HostCreateAckPayload
 {
     public bool ok { get; set; }
     public string roomId { get; set; }
+    public string gameMode { get; set; }
     public string error { get; set; }
 }
