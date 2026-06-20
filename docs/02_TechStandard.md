@@ -10,7 +10,6 @@
 | レンダリング | Universal Render Pipeline (URP) | 17.3.0 |
 | 入力管理 | Input System | 1.19.0 |
 | 非同期処理 | UniTask | - |
-| Reactive Extensions | R3 | - |
 | Socket.IO クライアント | SocketIOClient (doghappy) | 4.0.4 |
 | QRコード生成 | UniQRCode (MIT License) | - |
 
