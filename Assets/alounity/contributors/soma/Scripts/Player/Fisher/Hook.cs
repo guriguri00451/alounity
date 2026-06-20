@@ -16,24 +16,11 @@ public class Hook : MonoBehaviour
     void Awake()
     {
         hookRigidbody = GetComponent<Rigidbody>();
-
-        MakeLockState();
     }
 
     public Transform GetCaughtFish()
     {
         return caughtFish;
-    }
-
-
-    private void MakeLockState(bool isPivot = false)
-    {
-        hookRigidbody.isKinematic = true;
-        transform.SetParent(lineAttachPoint);
-        if(!isPivot)
-        {
-            transform.localPosition = new Vector3(0, 0, 0.1f);
-        }
     }
 
     private void MakeFreeState()
@@ -63,7 +50,6 @@ public class Hook : MonoBehaviour
             caughtFish = null;
         }
 
-        MakeLockState(); 
     }
 
     /// <summary>
@@ -78,8 +64,18 @@ public class Hook : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         if(caughtFish != null) return;
-
         if(!other.gameObject.CompareTag("FishZone")) return;
         onAbleCatch?.Invoke();
+    }
+    /// <summary>
+    /// OnTriggerExit is called when the Collider other has stopped touching the trigger.
+    /// </summary>
+    /// <param name="other">The other Collider involved in this collision.</param>
+    void OnTriggerExit(Collider other)
+    {
+        if(caughtFish != null) return;
+
+        if(!other.gameObject.CompareTag("FishZone")) return;
+        onUnableCatch?.Invoke();
     }
 }

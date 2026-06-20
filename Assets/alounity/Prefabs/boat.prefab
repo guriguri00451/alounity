@@ -762,7 +762,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2710580782599153055}
   serializedVersion: 5
-  m_Mass: 0.001
+  m_Mass: 10
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -1134,13 +1134,11 @@ MonoBehaviour:
   horizontalInput: 0
   fishPrefab: {fileID: 8585306600659894571, guid: ef6bc5c01679b440099e341aefb4face, type: 3}
   isDebugMode: 1
-  rodRotationSpeed: 200
-  rodMinRotation: -45
-  rodMaxRotation: 45
+  addUpVector: 1
   currentState: 0
-  castPower: 0.1
+  castPower: 120
   CatchRequiredShakeCount: 12
-  fishAcceraratePower: 0.5
+  fishAcceraratePower: 1500
   smallAttackPowerThresholdValue: 0.3
   middleAttackPowerThresholdValue: 0.6
   bigAttackPowerThresholdValue: 0.7
@@ -1967,7 +1965,7 @@ SpringJoint:
   m_EnableCollision: 0
   m_EnablePreprocessing: 1
   m_MassScale: 1
-  m_ConnectedMassScale: 1
+  m_ConnectedMassScale: 20
 --- !u!1 &7113555707298501783
 GameObject:
   m_ObjectHideFlags: 0

@@ -11,11 +11,9 @@ namespace FishRumble
         [Header("準備パラメータ")]
         [SerializeField] GameObject[] playerLocations;
         [SerializeField] GameObject playerPrefab;
-        [SerializeField] int countdownTimeMs;
-        [SerializeField] int battleTimeMs;
-        [SerializeField] int DeadTimeMs;
+        [SerializeField] int DeadCoolTimeMs;
+        [SerializeField]
         int[] playersLives;
-        int currentTime;
         int winningTeamID;
         PlayerManager[] players;
 
@@ -29,13 +27,7 @@ namespace FishRumble
             //バトル準備
             PlayersSpawn();
 
-            await Countdown();
-
             //バトル開始
-            await StartCountdown();
-
-            //バトル終了
-            await TimeUp();
 
         }
 
@@ -43,54 +35,55 @@ namespace FishRumble
         {
             for(int i = 0; i < AppManager.Instance.playerCount; i++)
             {
-                Instantiate (playerPrefab, playerLocations[i].transform.position, playerLocations[i].transform.rotation);
+                GameObject obj = Instantiate(playerPrefab, playerLocations[i].transform.position, playerLocations[i].transform.rotation);
+                players[i] = obj.GetComponent<PlayerManager>();
+                players[i].PlayerID = i;
+                players[i].onDeath += DeathPlayer;
             }
         }
 
-        async UniTask DeadCoolTime(PlayerState currentState,int teamID)
+        async void DeathPlayer(int i)
         {
-            for(int i = 0; i < players.Length; i++)
+            players[i].onDeath -= DeathPlayer;
+            playersLives[i] -= 1;
+            if(playersLives[i] <= 0)
             {
-                 if (PlayerState.Dead == currentState&&teamID==i)
+
+                return;
+            }
+            await DeadCoolTime();
+        }
+
+        async UniTask DeadCoolTime()
+        {
+            await UniTask.Delay(DeadCoolTimeMs);
+        }
+
+        void DefetePlayer(int playerID)
+        {
+            int winnerID = 0;
+            int livingCount = 0;
+            //もう決着か判断
+            for (int i = 0; i < playersLives.Length; i++)
+            {
+                if(playersLives[i] <= 0) 
                 {
-                    await Timer(DeadTimeMs);
+                    livingCount += 1;
+                    winnerID = i;
                 }
             }
-        }
 
-        async UniTask TimeUp()
-        {
-            FinishGame();
+            if(livingCount <= 1)
+            {
+                FinishGame(winnerID);
+            }
+            //UI真っ黒にする処理
         }
-
-        void FinishGame()
+        void FinishGame(int winnerPlayerID)
         {
             
-        }
-
-        async UniTask Countdown()
-        {
-            await Timer(countdownTimeMs);
-        }
-
-        async UniTask StartCountdown()
-        {
-            await Timer(battleTimeMs);
         }
 
         
-
-        async UniTask Timer(int Ms)
-        {
-            currentTime = Ms;
-            for(int i = 0; i < Ms; i++)
-            {
-                await UniTask.Delay(1);
-                currentTime -= 1;
-                Debug.Log(currentTime);
-            }
-            
-            return;
-        }
     }
 }
