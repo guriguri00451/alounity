@@ -31,19 +31,32 @@ alounity/
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── layout.tsx
-│   │   │   └── page.tsx       # コントローラー画面
-│   │   ├── components/        # UIコンポーネント（未実装）
-│   │   ├── hooks/             # カスタムフック（未実装）
-│   │   └── lib/               # ユーティリティ（未実装）
+│   │   │   ├── page.tsx       # ルームID入力画面
+│   │   │   └── room/
+│   │   │       └── [roomId]/
+│   │   │           └── page.tsx  # コントローラー画面（役割選択・センサー送信）
+│   │   ├── components/        # UIコンポーネント
+│   │   │   ├── PermissionRequest.tsx  # iOS権限リクエスト
+│   │   │   ├── RoleSelector.tsx       # 役割選択
+│   │   │   ├── SensorDebugOverlay.tsx # デバッグオーバーレイ
+│   │   │   └── SensorDisplay.tsx      # センサー値表示
+│   │   ├── hooks/             # カスタムフック
+│   │   │   ├── useDeviceMotion.ts  # センサーデータ取得
+│   │   │   └── useSocket.ts        # Socket.IO接続管理
+│   │   └── lib/
+│   │       └── types.ts       # 型定義
 │   ├── server/
-│   │   └── index.ts           # カスタムサーバー（Socket.IO統合、HTTPS対応）✅ 実装済み
+│   │   └── index.ts           # カスタムサーバー（Socket.IO統合、HTTPS対応、ルーム管理）
 │   ├── scripts/
-│   │   └── setup-https.sh     # HTTPS証明書生成スクリプト ✅ 実装済み
+│   │   └── setup-https.sh     # HTTPS証明書生成スクリプト
 │   ├── public/
 │   ├── package.json
 │   ├── tsconfig.json
 │   ├── next.config.ts
 │   └── certs/                 # mkcert証明書（.gitignore）
+├── docs/
+│   ├── room-management-plan.md
+│   └── qr-code-implementation.md
 ├── .gitignore
 └── ...
 ```
@@ -80,15 +93,37 @@ Unity
 
 ## Socket.IOイベント設計
 
+### ホスト（Unity）用イベント
+
 | イベント名 | 方向 | データ |
 |---|---|---|
-| `controller:connect` | スマホ → サーバー | `{ roomId?: string }` |
-| `controller:sensor` | スマホ → サーバー | `{ roomId?: string, role?: string, accel?, rotation?, orientation?, timestamp? }` |
-| `server:ack` | サーバー → スマホ | `{ received: boolean, playerId?: string, error?: string }` |
-| `unity:connect` | Unity → サーバー | `{ roomId?: string }` |
-| `sensor:data` | サーバー → Unity | `{ playerId, role, accel, rotation, orientation, timestamp }` |
+| `host:create` | Unity → サーバー | `{}` |
+| `host:create_ack` | サーバー → Unity | `{ ok: boolean, roomId?: string, error?: string }` |
+| `host:close` | Unity → サーバー | `{ roomId: string }` |
 
-**注記:** `room:state`イベントは現在実装されていません。
+### コントローラー（スマホ）用イベント
+
+| イベント名 | 方向 | データ |
+|---|---|---|
+| `room:exists` | スマホ → サーバー | `{ roomId: string }` |
+| `room:exists_ack` | サーバー → スマホ | `{ exists: boolean }` |
+| `controller:connect` | スマホ → サーバー | `{ roomId: string, role: string }` |
+| `server:ack` | サーバー → スマホ | `{ received: boolean, playerId?: string, error?: string }` |
+| `controller:sensor` | スマホ → サーバー | `{ roomId, role, accel, rotation, orientation, timestamp }` |
+
+### 共通イベント
+
+| イベント名 | 方向 | データ |
+|---|---|---|
+| `sensor:data` | サーバー → Unity | `{ playerId, role, accel, rotation, orientation, timestamp }` |
+| `room:closed` | サーバー → スマホ | `{ roomId: string, reason: string }` |
+
+### ルーム管理
+
+- サーバーが `Map<string, RoomState>` でアクティブルームをインメモリ管理
+- ルームIDはサーバー側で採番（6文字英数字、I/O/0/1除外）
+- ホスト（Unity）切断時に自動でルーム削除
+- 存在しないルームへの接続は `server:ack { received: false }` で拒否
 
 ## 実装フェーズ
 
@@ -193,18 +228,31 @@ Assets/alounity/
 **使用例:**
 ```csharp
 using SocketIOClient;
+using Cysharp.Threading.Tasks;
 
 var socket = new SocketIO("http://localhost:3000");
+
+// 接続完了時のハンドラ（イベントベース）
 socket.OnConnected += async (sender, e) => {
     Debug.Log("Connected to server");
-    await socket.EmitAsync("unity:connect", new { roomId = "room1" });
+    await socket.EmitAsync("host:create");
 };
-socket.On("sensor:data", response => {
-    var payload = response.GetValue<SensorDataPayload>(0);
-    // センサーデータをゲームロジックに適用
+
+// イベント受信ハンドラ（v4.x API: IEventContext を使用）
+socket.On("host:create_ack", async (IEventContext response) => {
+    var data = response.GetValue<HostCreateAckPayload>(0);
+    if (data.ok) {
+        Debug.Log($"Room created: {data.roomId}");
+        await UniTask.SwitchToMainThread(); // Unity APIを使う場合はメインスレッドに切り替え
+    }
 });
+
 await socket.ConnectAsync();
 ```
+
+**注意:** SocketIOClient v4.x ではコールバックがバックグラウンドスレッドで実行されるため、
+Unity API（`Texture2D`生成、`Debug.Log`など）を使う前に `UniTask.SwitchToMainThread()` で
+メインスレッドに切り替える必要があります。
 
 **websocket-sharpが非推奨の理由:**
 - Socket.IOプロトコル未対応
@@ -229,6 +277,46 @@ await socket.ConnectAsync();
 
 - Phase 3の3-4で実装済み
 - SocketIoClientDotNetを使用してサーバーから受信したセンサーデータをUnity側で処理
+
+### Phase 5: ルーム管理 ✅ 完了
+
+#### 5-1. サーバー側ルーム管理
+
+- `Map<string, RoomState>` でアクティブルームをインメモリ管理
+- `generateRoomId()` で6文字英数字を生成（I/O/0/1除外、30⁶通り）
+- `host:create` / `host:create_ack` イベントでルーム作成（サーバー採番）
+- `host:close` イベントでルーム閉鎖
+- `room:exists` / `room:exists_ack` イベントで事前存在確認
+- ホスト切断時に自動ルーム削除
+
+#### 5-2. Unity側ルーム作成
+
+- `SocketIOManager` で `host:create` を送信 → サーバーから `roomId` を受信
+- `ServerUri` プロパティでサーバーURIを公開（QRコード生成用）
+- `OnRoomCreated` イベントでルーム作成完了を通知
+- UniTaskでメインスレッド切り替えを実装
+
+#### 5-3. コントローラー側ルーム参加
+
+- `/` ページ: ルームID入力フォーム（6文字、大文字自動変換）
+- `/room/[roomId]` ページ: コントローラー画面（役割選択 → センサー送信）
+- `room:exists` で事前検証 → 存在しないルームはエラー表示
+
+### Phase 6: QRコード生成 ✅ 完了
+
+#### 6-1. QRコードエンコーダー導入
+
+- UniQRCode（MIT License）から `QREncoder.cs` を取得
+- `Assets/alounity/contributors/rita/Scripts/QR/` に配置
+
+#### 6-2. QRコード生成・表示
+
+- `QRCodeGenerator.cs`: 文字列から `Texture2D` を生成するstaticユーティリティ
+- `QRCodeDisplay.cs`: MonoBehaviourでUIにQRコードを表示
+- `SocketIOManager.OnRoomCreated` を購読して自動表示
+- 生成URL形式: `http://{host}:{port}/room/{roomId}`
+
+詳細: `docs/qr-code-implementation.md` を参照
 
 ## 最初の実装マイルストーン
 

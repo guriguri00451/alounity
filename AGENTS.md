@@ -41,7 +41,9 @@ Unityゲーム + スマホコントローラー。複数プレイヤーがスマ
 | Reactive Extensions | R3 | - |
 | コントローラーアプリ | Next.js (App Router) | 16.2.9 |
 | リアルタイム通信 | Socket.IO | 4.8.3 |
+| Socket.IO クライアント (Unity) | SocketIOClient (doghappy) | 4.0.4 |
 | センサーAPI | DeviceMotionEvent + DeviceOrientationEvent | - |
+| QRコード生成 | UniQRCode | - |
 | HTTPS（開発用） | mkcert | - |
 
 ## コーディング規約
@@ -100,16 +102,43 @@ npm run build      # プロダクションビルド
 - iOS 13+ではセンサーアクセスに `DeviceMotionEvent.requestPermission()` が必要
 - DeviceMotion/DeviceOrientation APIにはHTTPSが必要（Secure Context）
 - センサーデータは約30fpsにスロットルして応答性とネットワーク負荷のバランスを取る
+- SocketIOClient v4.x のコールバックはバックグラウンドスレッドで実行されるため、Unity APIを使う前に `UniTask.SwitchToMainThread()` でメインスレッドに切り替える必要がある
 - 詳細な実装計画は `docs/controller-implementation-plan.md` を参照
+- ルーム管理の詳細は `docs/room-management-plan.md` を参照
+- QRコード生成の詳細は `docs/qr-code-implementation.md` を参照
 
 ## Socket.IO イベント設計
 
+### ホスト（Unity）用イベント
+
 | イベント名 | 方向 | データ |
 |---|---|---|
-| `controller:connect` | スマホ → サーバー | `{ playerId, role }` |
-| `controller:sensor` | スマホ → サーバー | `{ playerId, role, accel, rotation, orientation, timestamp }` |
+| `host:create` | Unity → サーバー | `{}` |
+| `host:create_ack` | サーバー → Unity | `{ ok: boolean, roomId?: string, error?: string }` |
+| `host:close` | Unity → サーバー | `{ roomId: string }` |
+
+### コントローラー（スマホ）用イベント
+
+| イベント名 | 方向 | データ |
+|---|---|---|
+| `room:exists` | スマホ → サーバー | `{ roomId: string }` |
+| `room:exists_ack` | サーバー → スマホ | `{ exists: boolean }` |
+| `controller:connect` | スマホ → サーバー | `{ roomId: string, role: string }` |
+| `server:ack` | サーバー → スマホ | `{ received: boolean, playerId?: string, error?: string }` |
+| `controller:sensor` | スマホ → サーバー | `{ roomId, role, accel, rotation, orientation, timestamp }` |
+
+### 共通イベント
+
+| イベント名 | 方向 | データ |
+|---|---|---|
 | `sensor:data` | サーバー → Unity | `{ playerId, role, accel, rotation, orientation, timestamp }` |
-| `room:state` | サーバー → 全員 | `{ players: [...], status }` |
+| `room:closed` | サーバー → スマホ | `{ roomId: string, reason: string }` |
+
+### ルーム管理
+
+- サーバーが `Map<string, RoomState>` でアクティブルームをインメモリ管理
+- ルームIDはサーバー側で採番（6文字英数字、I/O/0/1除外）
+- ホスト（Unity）切断時に自動でルーム削除
 
 ### 役割（role）の種類
 
