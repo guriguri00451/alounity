@@ -11,16 +11,29 @@ public class SensorDataReceiver : MonoBehaviour
     [Header("イベント")]
     public UnityEvent<SensorDataPayload> onSensorDataReceived;
 
-    [Header("役割別イベント")]
-    public UnityEvent<AxisData> onPaddleRightInput;
-    public UnityEvent<AxisData> onPaddleLeftInput;
-    public UnityEvent<SensorDataPayload> onFisherInput;
+    [Header("チーム別イベント")]
+    public UnityEvent<SensorDataPayload> onTeamASensorData;
+    public UnityEvent<SensorDataPayload> onTeamBSensorData;
+
+    [Header("役割別イベント（Team A）")]
+    public UnityEvent<AxisData> onPaddleRightInput_A;
+    public UnityEvent<AxisData> onPaddleLeftInput_A;
+    public UnityEvent<SensorDataPayload> onFisherInput_A;
+
+    [Header("役割別イベント（Team B）")]
+    public UnityEvent<AxisData> onPaddleRightInput_B;
+    public UnityEvent<AxisData> onPaddleLeftInput_B;
+    public UnityEvent<SensorDataPayload> onFisherInput_B;
 
     SynchronizationContext mainThread;
 
     void Start()
     {
         mainThread = SynchronizationContext.Current;
+        if (mainThread == null)
+        {
+            Debug.LogWarning("[SensorDataReceiver] SynchronizationContext.Current is null, using fallback");
+        }
 
         var manager = SocketIOManager.Instance;
         Debug.Log($"[SensorDataReceiver] Start called. manager={(manager != null)}, connected={manager?.IsConnected}");
@@ -55,35 +68,89 @@ public class SensorDataReceiver : MonoBehaviour
 
     System.Threading.Tasks.Task OnSensorData(IEventContext response)
     {
-        mainThread.Post(_ =>
+        // バックグラウンドスレッドでデータを先に抽出
+        SensorDataPayload payload = null;
+        string rawText = null;
+        try
+        {
+            payload = response?.GetValue<SensorDataPayload>(0);
+            rawText = response?.RawText;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[SensorDataReceiver] データ抽出エラー: {e.Message}");
+            try { Debug.LogError($"[SensorDataReceiver] RawText: {response?.RawText}"); } catch { }
+            return System.Threading.Tasks.Task.CompletedTask;
+        }
+
+        void ProcessData()
         {
             try
             {
-                var payload = response.GetValue<SensorDataPayload>(0);
-                if (payload == null) return;
+                if (payload == null)
+                {
+                    Debug.LogWarning($"[SensorDataReceiver] payload is null, rawText: {rawText}");
+                    return;
+                }
 
                 onSensorDataReceived?.Invoke(payload);
 
+                // チーム別イベント発火
+                if (payload.team == "B")
+                {
+                    onTeamBSensorData?.Invoke(payload);
+                }
+                else
+                {
+                    onTeamASensorData?.Invoke(payload);
+                }
+
+                // チーム別役割イベント発火
+                bool isTeamB = payload.team == "B";
                 switch (payload.role)
                 {
                     case "paddle_right":
-                        onPaddleRightInput?.Invoke(payload.accel);
+                        if (payload.accel != null)
+                        {
+                            if (isTeamB)
+                                onPaddleRightInput_B?.Invoke(payload.accel);
+                            else
+                                onPaddleRightInput_A?.Invoke(payload.accel);
+                        }
                         break;
 
                     case "paddle_left":
-                        onPaddleLeftInput?.Invoke(payload.accel);
+                        if (payload.accel != null)
+                        {
+                            if (isTeamB)
+                                onPaddleLeftInput_B?.Invoke(payload.accel);
+                            else
+                                onPaddleLeftInput_A?.Invoke(payload.accel);
+                        }
                         break;
 
                     case "fisher":
-                        onFisherInput?.Invoke(payload);
+                        if (isTeamB)
+                            onFisherInput_B?.Invoke(payload);
+                        else
+                            onFisherInput_A?.Invoke(payload);
                         break;
                 }
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"[SensorDataReceiver] パースエラー: {e.Message}");
+                Debug.LogError($"[SensorDataReceiver] 処理エラー: {e.Message}");
             }
-        }, null);
+        }
+
+        if (mainThread != null)
+        {
+            mainThread.Post(_ => ProcessData(), null);
+        }
+        else
+        {
+            ProcessData();
+        }
         return System.Threading.Tasks.Task.CompletedTask;
     }
 }

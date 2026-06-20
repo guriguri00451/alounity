@@ -22,9 +22,9 @@ public class PaddleExample : MonoBehaviour
         // 閾値以下の動きは無視
         if (magnitude < shakeThreshold) return;
         
-        // 振る強さに応じて力をかける（前後方向に推進力）
+        // 振る強さに応じて力をかける（上方向に推進力）
         float paddleForce = magnitude * forceMultiplier;
-        rb.AddForce(0, 0, paddleForce, ForceMode.Acceleration);
+        rb.AddForce(0, paddleForce, 0, ForceMode.Acceleration);
         
         Debug.Log($"[Paddle] 強度: {magnitude:F2}, 力: {paddleForce:F2}");
     }

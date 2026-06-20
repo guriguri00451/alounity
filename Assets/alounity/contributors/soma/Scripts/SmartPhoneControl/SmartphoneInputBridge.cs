@@ -17,7 +17,7 @@ public class SmartphoneInputBridge : MonoBehaviour
 
     // 左右オール：この加速度（m/s²）で float 値が 1.0 になる
     const float PaddleMaxAccel = 9.8f;
-    // キャスト：この角速度（deg/s）で float 値が 1.0 になる
+    // キャスト/リール：この角速度（deg/s）で float 値が 1.0 になる
     const float CastMaxRotation = 180f;
     // シェイク：この角速度（deg/s）で float 値が 1.0 になる
     const float ShakeMaxRotation = 360f;
@@ -35,18 +35,24 @@ public class SmartphoneInputBridge : MonoBehaviour
             Debug.LogError("[SmartphoneInputBridge] SensorDataReceiver が未設定です。Inspector で設定してください。");
             return;
         }
-        receiver.onPaddleLeftInput.AddListener(ApplyPaddleLeft);
-        receiver.onPaddleRightInput.AddListener(ApplyPaddleRight);
-        receiver.onFisherInput.AddListener(ApplyFisher);
+        receiver.onPaddleLeftInput_A.AddListener(ApplyPaddleLeft);
+        receiver.onPaddleLeftInput_B.AddListener(ApplyPaddleLeft);
+        receiver.onPaddleRightInput_A.AddListener(ApplyPaddleRight);
+        receiver.onPaddleRightInput_B.AddListener(ApplyPaddleRight);
+        receiver.onFisherInput_A.AddListener(ApplyFisher);
+        receiver.onFisherInput_B.AddListener(ApplyFisher);
     }
 
     void OnDestroy()
     {
         if (receiver != null)
         {
-            receiver.onPaddleLeftInput.RemoveListener(ApplyPaddleLeft);
-            receiver.onPaddleRightInput.RemoveListener(ApplyPaddleRight);
-            receiver.onFisherInput.RemoveListener(ApplyFisher);
+            receiver.onPaddleLeftInput_A.RemoveListener(ApplyPaddleLeft);
+            receiver.onPaddleLeftInput_B.RemoveListener(ApplyPaddleLeft);
+            receiver.onPaddleRightInput_A.RemoveListener(ApplyPaddleRight);
+            receiver.onPaddleRightInput_B.RemoveListener(ApplyPaddleRight);
+            receiver.onFisherInput_A.RemoveListener(ApplyFisher);
+            receiver.onFisherInput_B.RemoveListener(ApplyFisher);
         }
         if (device != null && device.added)
             InputSystem.RemoveDevice(device);
@@ -73,8 +79,9 @@ public class SmartphoneInputBridge : MonoBehaviour
         }
         if (data.rotation != null)
         {
-            // beta（前後傾き角速度）をキャストに使う
-            currentState.cast = Normalize(Mathf.Abs(data.rotation.beta), CastMaxRotation);
+            // beta が負（前方への振り）→ Cast、正（手前への引き）→ Reel
+            currentState.cast = Normalize(Mathf.Max(0f, -data.rotation.beta), CastMaxRotation);
+            currentState.reel = Normalize(Mathf.Max(0f, data.rotation.beta), CastMaxRotation);
             // alpha（横傾き角速度）をシェイクに使う
             currentState.shake = Normalize(Mathf.Abs(data.rotation.alpha), ShakeMaxRotation);
         }

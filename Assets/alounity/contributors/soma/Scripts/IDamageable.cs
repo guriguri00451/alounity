@@ -1,3 +1,4 @@
+using UnityEngine;
 namespace FishRumble
 {
     /// <summary>
@@ -5,6 +6,6 @@ namespace FishRumble
     /// </summary>
     public interface IDamageable
     {
-        void TakeDamage(int damage);
+        void TakeDamage(int damage,int playerID);
     }
 }

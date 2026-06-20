@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
-import type { PlayerRole, SensorPayload, ServerAckPayload } from "@/lib/types";
+import type { PlayerRole, SensorPayload, ServerAckPayload, Team } from "@/lib/types";
 
 interface UseSocketOptions {
   serverUrl?: string;
   roomId?: string;
   role: PlayerRole;
+  team: Team;
   autoConnect?: boolean;
 }
 
@@ -25,8 +26,9 @@ export function useSocket(options: UseSocketOptions): UseSocketReturn {
     serverUrl = typeof window !== "undefined"
       ? `${window.location.protocol}//${window.location.hostname}:${window.location.port}`
       : "",
-    roomId = "default",
+    roomId = "",
     role,
+    team,
     autoConnect = true,
   } = options;
 
@@ -36,6 +38,7 @@ export function useSocket(options: UseSocketOptions): UseSocketReturn {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const roleRef = useRef(role);
   const roomIdRef = useRef(roomId);
+  const teamRef = useRef(team);
 
   useEffect(() => {
     roleRef.current = role;
@@ -44,6 +47,10 @@ export function useSocket(options: UseSocketOptions): UseSocketReturn {
   useEffect(() => {
     roomIdRef.current = roomId;
   }, [roomId]);
+
+  useEffect(() => {
+    teamRef.current = team;
+  }, [team]);
 
   const connect = useCallback(() => {
     if (socketRef.current?.connected) return;
@@ -63,12 +70,16 @@ export function useSocket(options: UseSocketOptions): UseSocketReturn {
       socket.emit("controller:connect", {
         roomId: roomIdRef.current,
         role: roleRef.current,
+        team: teamRef.current,
       });
     });
 
     socket.on("server:ack", (data: ServerAckPayload) => {
       if (data.received && data.playerId) {
         setPlayerId(data.playerId);
+        setConnectionError(null);
+      } else if (!data.received && data.error) {
+        setConnectionError(data.error);
       }
     });
 
@@ -104,6 +115,7 @@ export function useSocket(options: UseSocketOptions): UseSocketReturn {
     socket.emit("controller:sensor", {
       roomId: roomIdRef.current,
       role: roleRef.current,
+      team: teamRef.current,
       accel: data.accel,
       rotation: data.rotation,
       orientation: data.orientation,

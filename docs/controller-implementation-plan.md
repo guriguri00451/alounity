@@ -1,16 +1,143 @@
-# スマホコントローラー実装計画
+# スマホコントローラー仕様書
 
 ## 概要
 
-Unityゲームのコントローラーとしてスマホを活用する。スマホのジャイロセンサー・加速度センサーの値をsocket.ioで通信し、Unity側に送信する。
+Unityゲームのコントローラーとしてスマホを活用する。スマホのジャイロセンサー・加速度センサーの値をSocket.IOで通信し、Unity側に送信する。
 
-## 役割別センサーマッピング
+## システムアーキテクチャ
+
+```
+スマホブラウザ → Socket.IO → Next.jsサーバー → Socket.IO → Unity
+```
+
+**通信方式:** Socket.IOによる双方向リアルタイム通信
+
+### 通信フロー詳細
+
+1. Unityがサーバーにルームを作成（`host:create`）
+2. サーバーがルームIDを発行（6文字英数字）
+3. UnityがQRコードにルームURLをエンコードして表示
+4. スマホでQRコードを読み取り、ルームページにアクセス
+5. スマホがルームに参加（`controller:connect`）
+6. スマホがセンサーデータを送信（`controller:sensor`、30fps）
+7. サーバーがデータをUnityに転送（`sensor:data`）
+
+## 技術スタック
+
+| 層 | 技術 | バージョン |
+|---|---|---|
+| ゲームエンジン | Unity 6 + URP | 6000.3.17f1 |
+| コントローラーアプリ | Next.js (App Router) | 16.2.9 |
+| リアルタイム通信 | Socket.IO | 4.8.3 |
+| Socket.IO クライアント (Unity) | SocketIOClient (doghappy) | 4.0.4 |
+| センサー API | DeviceMotionEvent / DeviceOrientationEvent | - |
+| QRコード生成 | UniQRCode | - |
+| HTTPS（開発用） | mkcert | - |
+| 言語 | TypeScript / C# | - |
+
+## ディレクトリ構成
+
+```
+alounity/
+├── Assets/alounity/            # Unityプロジェクト
+│   └── contributors/
+│       ├── rita/Scripts/       # rita の実装
+│       │   ├── SocketIOManager.cs          # Socket.IO接続管理（Singleton）
+│       │   ├── SensorDataReceiver.cs       # センサーデータ受信・振り分け
+│       │   ├── SensorDataModels.cs         # データモデル定義
+│       │   └── QR/                         # QRコード生成
+│       └── soma/Scripts/       # soma の実装
+│           ├── SmartphoneInputBridge.cs     # センサー→InputSystem変換
+│           └── ...
+├── controller/                 # Next.jsコントローラーアプリ
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx                    # ルームID入力画面
+│   │   │   └── room/[roomId]/page.tsx      # コントローラー画面
+│   │   ├── components/
+│   │   │   ├── PermissionRequest.tsx       # iOS権限リクエスト
+│   │   │   ├── RoleSelector.tsx            # 役割選択（チーム対応）
+│   │   │   ├── TeamSelector.tsx            # チーム選択（versusモード）
+│   │   │   ├── SensorDebugOverlay.tsx      # デバッグオーバーレイ
+│   │   │   └── SensorDisplay.tsx           # センサー値表示
+│   │   ├── hooks/
+│   │   │   ├── useDeviceMotion.ts          # センサーデータ取得
+│   │   │   └── useSocket.ts                # Socket.IO接続管理
+│   │   └── lib/
+│   │       └── types.ts                    # 型定義
+│   └── server/
+│       └── index.ts                        # カスタムサーバー（Socket.IO + ルーム管理）
+└── docs/
+    └── ...
+```
+
+## Socket.IO イベント仕様
+
+### ホスト（Unity）用イベント
+
+| イベント名 | 方向 | データ | 説明 |
+|---|---|---|---|
+| `host:create` | Unity → サーバー | `{ gameMode?: "single" \| "versus" }` | ルーム作成要求 |
+| `host:create_ack` | サーバー → Unity | `{ ok: boolean, roomId?: string, gameMode?: string, error?: string }` | 作成結果 |
+| `host:close` | Unity → サーバー | `{ roomId: string }` | ルーム閉鎖 |
+
+### コントローラー（スマホ）用イベント
+
+| イベント名 | 方向 | データ | 説明 |
+|---|---|---|---|
+| `room:exists` | スマホ → サーバー | `{ roomId: string }` | ルーム存在確認 |
+| `room:exists_ack` | サーバー → スマホ | `{ exists: boolean, gameMode?: string, takenRoles?: Record<string, string[]> }` | ルーム情報 + チーム別占有役割 |
+| `controller:connect` | スマホ → サーバー | `{ roomId: string, role: string, team: string }` | ルーム参加 |
+| `server:ack` | サーバー → スマホ | `{ received: boolean, playerId?: string, error?: string }` | 参加結果 |
+| `controller:sensor` | スマホ → サーバー | `{ roomId, role, team, accel, rotation, orientation, timestamp }` | センサーデータ送信 |
+
+### 共通イベント
+
+| イベント名 | 方向 | データ | 説明 |
+|---|---|---|---|
+| `sensor:data` | サーバー → Unity | `{ playerId, role, team, accel, rotation, orientation, timestamp }` | センサーデータ転送 |
+| `room:closed` | サーバー → スマホ/Unity | `{ roomId: string, reason: string }` | ルーム閉鎖通知 |
+| `room:players_update` | サーバー → スマホ/Unity | `{ players: { playerId, role, team }[] }` | プレイヤー変更通知 |
+
+## 役割とチーム
+
+### 役割（role）
 
 | 役割 | 使用センサー | 検出する動作 | Unity側での用途 |
 |------|-------------|-------------|----------------|
-| 右オール | DeviceMotionEvent (acceleration) | スマホを振る動作 | カヤック右側の推進力 |
-| 左オール | DeviceMotionEvent (acceleration) | スマホを振る動作 | カヤック左側の推進力 |
-| 釣り | DeviceOrientationEvent + DeviceMotionEvent | 方位角＋振りかぶり＋キャスト＋引き上げ | 釣り針の方向制御、キャスト、リール |
+| `paddle_right` | DeviceMotionEvent (acceleration) | スマホを振る動作 | カヤック右側の推進力 |
+| `paddle_left` | DeviceMotionEvent (acceleration) | スマホを振る動作 | カヤック左側の推進力 |
+| `fisher` | DeviceOrientationEvent + DeviceMotionEvent | 方位角＋振りかぶり＋キャスト＋引き上げ | 釣り針の方向制御、キャスト、リール |
+
+- 各役割は1チーム内で1デバイスのみ占有可能
+- 重複接続はサーバーが拒否（`server:ack { received: false, error: "この役割は既に使用されています" }`）
+
+### チーム（team）
+
+| チーム | 説明 |
+|--------|------|
+| `A` | チームA。singleモードでは全員がチームA |
+| `B` | チームB。versusモードのみ存在 |
+
+- singleモード: 3人全員がチームA
+- versusモード: 3vs3（チームA 3人 + チームB 3人）
+
+## センサーデータ形式
+
+```typescript
+{
+  accel: { x: number, y: number, z: number },           // 加速度 [m/s²]
+  rotation: { alpha: number, beta: number, gamma: number }, // 回転角速度 [deg/s]
+  orientation: { alpha: number, beta: number, gamma: number }, // 端末の向き [度]
+  timestamp: number
+}
+```
+
+### データ加工ルール
+
+- 加速度: `accelerationIncludingGravity` ではなく `acceleration` を使用（重力分離済み）
+- 送信頻度: 30fps（33ms間隔でスロットル）
 
 ## 釣りアクションのステートマシン
 
@@ -21,221 +148,84 @@ Idle → Waiting（キャスト入力：振りかぶり検出）
      → Idle（攻撃完了 / 魚を手放す）
 ```
 
+## ルーム管理仕様
 
-## ディレクトリ構成
+### ルームのライフサイクル
 
-```
-alounity/
-├── Assets/                    # Unityプロジェクト（既存）
-├── controller/                # Next.jsプロジェクト（新規）
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── layout.tsx
-│   │   │   └── page.tsx       # コントローラー画面
-│   │   ├── components/        # UIコンポーネント（未実装）
-│   │   ├── hooks/             # カスタムフック（未実装）
-│   │   └── lib/               # ユーティリティ（未実装）
-│   ├── server/
-│   │   └── index.ts           # カスタムサーバー（Socket.IO統合、HTTPS対応）✅ 実装済み
-│   ├── scripts/
-│   │   └── setup-https.sh     # HTTPS証明書生成スクリプト ✅ 実装済み
-│   ├── public/
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── next.config.ts
-│   └── certs/                 # mkcert証明書（.gitignore）
-├── .gitignore
-└── ...
-```
+1. **作成**: Unityが `host:create` を送信 → サーバーがルームIDを採番
+2. **参加**: スマホが `controller:connect` を送信 → サーバーが役割重複チェック後、参加許可
+3. **運用**: センサーデータの転送、プレイヤー状態のリアルタイム通知
+4. **終了**: Unity切断時に自動削除、または Unityが `host:close` で明示的削除
 
-## 技術スタック
+### ルームID
 
-| 層 | 技術 | バージョン |
-|---|---|---|
-| フロントエンド | Next.js 16.x (App Router), React 19 | 16.2.9 |
-| リアルタイム通信 | Socket.IO (client: `socket.io-client`, server: `socket.io`) | 4.8.3 |
-| センサー API | Device Orientation Events（`DeviceMotionEvent` / `DeviceOrientationEvent`） | - |
-| HTTPS | mkcert（ローカル開発用） | - |
-| 言語 | TypeScript | - |
-| Unity Socket.IO | SocketIOClient (doghappy) | 3.1.2 / 4.0.4 |
+- 6文字英数字（I/O/0/1除外、30⁶通り）
+- サーバー側で採番
 
-## 通信アーキテクチャ
+### プレイヤー管理
 
-**Next.jsサーバー経由方式**を採用。
+- サーバーが `Map<string, RoomState>` でインメモリ管理
+- 各プレイヤーの役割・チームを管理（`Map<socketId, { role, team }>`）
+- プレイヤー切断時に役割を自動解放
+- 役割変更時は `room:players_update` で全クライアントに通知
 
-```
-スマホ（ブラウザ）
-    ↓ Socket.IO（WebSocket）
-Next.jsサーバー（controller/）
-    ↓ Socket.IO（WebSocket）
-Unity
-```
+## QRコード
 
-### 選定理由
+- Unityがルーム作成成功時にQRコードを生成・表示
+- URL形式: `http(s)://{host}:{port}/room/{roomId}`
+- 使用ライブラリ: UniQRCode（`QREncoder.cs`）
 
-- 開発すべきサーバーが1つで済む
-- Next.jsのAPI RoutesでSocket.IOサーバーを同居させられる
-- ルーム管理、プレイヤー管理などのゲームロジックをJavaScript/TypeScriptで統一できる
-- スマホ側のUI（ボタン表示やステータス表示）もNext.jsで実装できる
+## Unity側実装詳細
 
-## Socket.IOイベント設計
+### SocketIOManager
 
-| イベント名 | 方向 | データ |
-|---|---|---|
-| `controller:connect` | スマホ → サーバー | `{ roomId?: string }` |
-| `controller:sensor` | スマホ → サーバー | `{ roomId?: string, role?: string, accel?, rotation?, orientation?, timestamp? }` |
-| `server:ack` | サーバー → スマホ | `{ received: boolean, playerId?: string, error?: string }` |
-| `unity:connect` | Unity → サーバー | `{ roomId?: string }` |
-| `sensor:data` | サーバー → Unity | `{ playerId, role, accel, rotation, orientation, timestamp }` |
+- Singletonパターン
+- `host:create` / `host:close` イベント送信
+- `host:create_ack` イベント受信
+- サーバーURIを公開（QRコード生成用）
+- 再接続ロジック実装済み
 
-**注記:** `room:state`イベントは現在実装されていません。
+### SensorDataReceiver
 
-## 実装フェーズ
+- `sensor:data` イベント受信
+- チーム別イベント発火:
+  - `onTeamASensorData` / `onTeamBSensorData`
+- 役割別イベント発火:
+  - `onPaddleRightInput_A` / `onPaddleRightInput_B`
+  - `onPaddleLeftInput_A` / `onPaddleLeftInput_B`
+  - `onFisherInput_A` / `onFisherInput_B`
+- singleモードでは `_A` イベントのみ使用
+- バックグラウンドスレッド対応（`SynchronizationContext` でメインスレッドにディスパッチ）
 
-### Phase 1: プロジェクトセットアップ
+### SmartphoneInputBridge
 
-#### 1-1. Next.jsプロジェクト作成 ✅ 完了
+- SensorDataReceiverのイベントをUnity InputSystemの `SmartphoneDevice` に変換
+- 加速度 → パドル強度（9.8 m/s² で最大値1.0）
+- 角速度 + 方位角 → 釣り操作
 
-- `controller/` 配下にNext.js 16.xをセットアップ
-- TypeScript, App Router, Tailwind CSS
-- 依存関係追加: `socket.io`, `socket.io-client`
+## 開発環境セットアップ
 
-#### 1-2. カスタムサーバー構成 ✅ 完了
-
-- Socket.IOをNext.jsと統合するため、カスタムサーバー（`server/index.ts`）を作成
-- Next.jsのデフォルトサーバーではSocket.IOのWebSocket接続を扱えないため、`next` + `http.Server` + `socket.io` を組み合わせたカスタムサーバーを使用
-- ポート: 3000
-- Socket.IOイベント: `controller:connect`, `controller:sensor`, `sensor:data`, `unity:connect`
-- ルーム機能: `roomId`ベースのルーム管理
-
-#### 1-3. HTTPS環境構築（mkcert） ✅ 完了
-
-- `scripts/setup-https.sh` で証明書生成スクリプトを作成
-- カスタムサーバーでHTTPS対応を実装（`HTTPS=true`環境変数でHTTPSモード起動）
-- `npm run setup:https` でmkcertを使用した証明書生成
-- `npm run dev:https` でHTTPSサーバーを起動
-- `certs/` ディレクトリに証明書を保存（`.gitignore`に追加済み）
-- localhost、127.0.0.1、ローカルIPアドレス用の証明書を生成
-
-### Phase 2: センサーデータ取得
-
-#### 2-1. iOS権限リクエスト実装
-
-- `components/PermissionRequest.tsx`
-- iOS 13+では `DeviceMotionEvent.requestPermission()` でユーザー許可が必要
-- ボタンタップで権限リクエスト→許可後にセンサーデータ取得開始
-
-#### 2-2. センサーイベントフック実装
-
-- `hooks/useDeviceMotion.ts`
-- 取得データ:
-  - **加速度**: `acceleration` (x, y, z) [m/s²]（DeviceMotionEvent）
-  - **加速度（重力含む）**: `accelerationIncludingGravity` (x, y, z)（DeviceMotionEvent）
-  - **回転角速度**: `rotationRate` (alpha, beta, gamma) [deg/s]（DeviceMotionEvent）
-  - **端末の向き**: `alpha, beta, gamma` [度]（DeviceOrientationEvent）
-- 送信頻度: 約60Hz（`devicemotion` イベントの発火頻度に依存）
-- デバウンス/スロットル処理で送信間隔を調整（例: 30fpsに制限）
-
-#### 2-3. センサー値表示コンポーネント
-
-- `components/SensorDisplay.tsx`
-- リアルタイムで加速度・ジャイロの値を画面に表示
-- デバッグ用。数値＋簡易バーで可視化
-
-### Phase 3: Socket.IO通信
-
-#### 3-1. Socket.IOサーバー実装
-
-- `server/index.ts` 内にSocket.IOサーバーを統合
-- CORS設定
-- 接続/切断イベントのハンドリング
-
-#### 3-2. Socket.IOクライアント（スマホ側）
-
-- `hooks/useSocket.ts`
-- サーバーに接続、センサーデータをemit
-- 再接続ロジック含む
-
-#### 3-3. プレイヤー管理
-
-- 接続時にプレイヤーIDを割り当て（UUID）
-- ルーム概念: 同一ルーム内のプレイヤーのセンサーデータをUnityに転送
-
-#### 3-4. Unity側Socket.IOクライアント実装 ⏳ 実装済み
-
-**技術選定:** SocketIOClient（ https://github.com/doghappy/socket.io-client-csharp ）
-
-`SocketIoClientDotNet`（Quobject）は2019年でメンテナンス停止、依存DLLが`.NET Standard 2.0`未対応だったため、現在もメンテナンスが続く`SocketIOClient`（doghappy）に変更。
-
-**特徴:**
-- Socket.IO v2/v3/v4 完全対応（サーバーv4と一致）
-- .NET Standard 2.0 対応
-- 本体は `SocketIOClient.dll` 1つだが、内部で `Microsoft.Extensions.DependencyInjection` / `System.Text.Json` 等に依存
-- 依存DLLは NuGet から netstandard2.0 版を取得して `Assets/Plugins/` に一括配置が必要（計13ファイル）
-- デフォルトシリアライザ: System.Text.Json
-- Newtonsoft.Json シリアライザも選択可能（別パッケージ）
-
-**作成ファイル:**
-```text
-Assets/alounity/
-└── Scripts/
-    └── Network/
-        ├── SocketIOManager.cs      # Socket.IO接続管理（Singleton）
-        ├── SensorDataReceiver.cs   # センサーデータ受信・適用
-        └── SensorDataModels.cs     # データモデル定義
+```bash
+cd controller
+npm install
+npm run dev                  # HTTPモード（localhost）
+HTTPS=true npm run dev       # HTTPSモード（要mkcert証明書）
 ```
 
-**SocketIOClientの導入方法:**
-1. NuGetから`SocketIOClient`パッケージをダウンロード
-2. `lib/netstandard2.0/SocketIOClient.dll` を `Assets/Plugins/` に配置
-3. Unity Editorをリフレッシュ
+### CI
 
-**使用例:**
-```csharp
-using SocketIOClient;
+| チェック | コマンド |
+|---------|---------|
+| Biome (lint + format) | `npm run check` |
+| TypeScript型チェック | `npm run typecheck` |
+| テスト | `npm run test:run` |
+| ビルド | `npm run build` |
 
-var socket = new SocketIO("http://localhost:3000");
-socket.OnConnected += async (sender, e) => {
-    Debug.Log("Connected to server");
-    await socket.EmitAsync("unity:connect", new { roomId = "room1" });
-};
-socket.On("sensor:data", response => {
-    var payload = response.GetValue<SensorDataPayload>(0);
-    // センサーデータをゲームロジックに適用
-});
-await socket.ConnectAsync();
-```
+## 注意事項
 
-**websocket-sharpが非推奨の理由:**
-- Socket.IOプロトコル未対応
-- サーバー側に raw WebSocket のエンドポイント追加が必要（工数増）
-- ルーム管理・再接続を自前実装
-
-### Phase 4: 動作確認・最適化
-
-#### 4-1. スマホからのアクセス確認
-
-- PCとスマホを同一LANに接続
-- `https://<PCのローカルIP>:3000` でアクセス
+- iOS 13+ではセンサーアクセスに `DeviceMotionEvent.requestPermission()` が必要
+- DeviceMotion / DeviceOrientation APIにはHTTPSが必要（Secure Context）
+- センサーデータは30fpsにスロットル
+- SocketIOClient v4.x のコールバックはバックグラウンドスレッドで実行されるため、Unity APIを使う前に `UniTask.SwitchToMainThread()` でメインスレッドに切り替える必要がある
+- 同一LAN内でPCとスマホを接続して動作確認
 - mkcertの証明書をスマホに信頼させる必要がある場合がある
-
-#### 4-2. 通信最適化
-
-- センサーデータの送信間隔調整（30fps程度を推奨）
-- バイナリ送信の検討（Socket.IOはバイナリ対応済み）
-- 圧縮オプション有効化
-
-#### 4-3. Unity側接続
-
-- Phase 3の3-4で実装済み
-- SocketIoClientDotNetを使用してサーバーから受信したセンサーデータをUnity側で処理
-
-## 最初の実装マイルストーン
-
-1. Next.jsプロジェクト作成 & 依存関係インストール
-2. カスタムサーバー（HTTPS + Socket.IO）セットアップ
-3. ページ作成（コントローラー画面のUI）
-4. センサーイベント実装（権限リクエスト + センサー値取得）
-5. センサー値を画面に表示
-6. Socket.IOでサーバーにセンサーデータ送信
-7. サーバー側で受信確認（コンソール出力）
