@@ -44,41 +44,75 @@ graph TB
         FC --> HM
     end
 
-    SIOC -- "controller:connect<br/>controller:sensor" --> SIOS
-    SIOS -- "sensor:data<br/>room:state" --> SIOU
-    SIOU -- "unity:connect" --> SIOS
+    SIOC -- "controller:connect<br/>controller:sensor<br/>room:exists" --> SIOS
+    SIOS -- "sensor:data<br/>room:closed<br/>server:ack<br/>room:exists_ack" --> SIOC
+    SIOU -- "host:create<br/>host:close" --> SIOS
+    SIOS -- "host:create_ack" --> SIOU
 ```
 
 ### 通信フロー
 
 ```mermaid
 sequenceDiagram
-    participant P as スマホブラウザ
-    participant S as Next.js Server
     participant U as Unity
+    participant S as Next.js Server
+    participant P as スマホブラウザ
+
+    Note over U,S: ルーム作成フェーズ
+    U->>S: host:create
+    S-->>U: host:create_ack { ok, roomId }
+
+    Note over P,S: ルーム参加フェーズ
+    P->>S: room:exists { roomId }
+    S-->>P: room:exists_ack { exists }
 
     P->>S: controller:connect { roomId, role }
-    S-->>P: server:ack { playerId }
-    U->>S: unity:connect { roomId }
+    S-->>P: server:ack { received, playerId, error? }
 
+    Note over P,U: センサーデータ送受信
     loop 30fps スロットリング
-        P->>S: controller:sensor { accel, rotation, orientation }
+        P->>S: controller:sensor { roomId, role, accel, rotation, orientation }
         S->>U: sensor:data { playerId, role, accel, rotation, orientation }
     end
 
-    S->>P: room:state { players, status }
+    Note over U,S: ルーム閉鎖
+    U->>S: host:close { roomId }
+    S->>P: room:closed { roomId, reason }
 ```
 
 ### Socket.IO イベント設計
 
+#### ホスト（Unity）用イベント
+
 | イベント名 | 方向 | データ |
 |---|---|---|
-| `controller:connect` | スマホ → サーバー | `{ roomId, role }` |
+| `host:create` | Unity → サーバー | `{}` |
+| `host:create_ack` | サーバー → Unity | `{ ok: boolean, roomId?: string, error?: string }` |
+| `host:close` | Unity → サーバー | `{ roomId: string }` |
+
+#### コントローラー（スマホ）用イベント
+
+| イベント名 | 方向 | データ |
+|---|---|---|
+| `room:exists` | スマホ → サーバー | `{ roomId: string }` |
+| `room:exists_ack` | サーバー → スマホ | `{ exists: boolean }` |
+| `controller:connect` | スマホ → サーバー | `{ roomId: string, role: string }` |
+| `server:ack` | サーバー → スマホ | `{ received: boolean, playerId?: string, error?: string }` |
 | `controller:sensor` | スマホ → サーバー | `{ roomId, role, accel, rotation, orientation, timestamp }` |
-| `unity:connect` | Unity → サーバー | `{ roomId }` |
+
+#### 共通イベント
+
+| イベント名 | 方向 | データ |
+|---|---|---|
 | `sensor:data` | サーバー → Unity | `{ playerId, role, accel, rotation, orientation, timestamp }` |
-| `room:state` | サーバー → 全員 | `{ players: [...], status }` |
-| `server:ack` | サーバー → スマホ | `{ received, playerId }` |
+| `room:closed` | サーバー → スマホ | `{ roomId: string, reason: string }` |
+
+#### ルーム管理
+
+- サーバーが `Map<string, RoomState>` でアクティブルームをインメモリ管理
+- ルームIDはサーバー側で採番（6文字英数字、I/O/0/1除外、30⁶通り）
+- ホスト（Unity）切断時に自動でルーム削除
+- 存在しないルームへの接続は `server:ack { received: false }` で拒否
 
 ### 役割（role）の種類
 
@@ -147,6 +181,9 @@ sequenceDiagram
 
 | クラス名 | パス | 役割 |
 |---------|------|------|
+| `SocketIOManager` | `contributors/rita/Scripts/` | Socket.IO接続管理（Singleton）。ルーム作成・閉鎖、センサーデータ受信 |
+| `QRCodeDisplay` | `contributors/rita/Scripts/QR/` | ルームIDのQRコードをUIに表示（MonoBehaviour） |
+| `QRCodeGenerator` | `contributors/rita/Scripts/QR/` | 文字列からQRコード `Texture2D` を生成（static） |
 | `FisherController` | `contributors/soma/Scripts/` | 釣り人の状態管理・入力処理（Idle → Waiting → Catching → Swinging） |
 | `HookMover` | `contributors/soma/Scripts/` | 釣り針の物理演算・浮力・水中抵抗制御 |
 | `BoatController` | `contributors/chebuo/Scripts/` | カヤック移動（WheelCollider ベース） |
