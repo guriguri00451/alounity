@@ -26,7 +26,7 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
     return { rotationAlpha: alpha, absRotation: Math.abs(alpha) };
   }, [sensorData]);
 
-  const normalizedForce = Math.min(Math.max((absRotation - SWING_THRESHOLD) / 200, 0), 1);
+  const normalizedForce = Math.min(Math.max((absRotation - SWING_THRESHOLD) / 300, 0), 1);
 
   useEffect(() => {
     setDisplayedPower((prev) => Math.max(prev, normalizedForce));
