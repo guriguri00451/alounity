@@ -28,6 +28,8 @@ public class SmartphoneDevice : InputDevice
     public AxisControl cast { get; private set; }
     /// <summary>シェイクジェスチャーの強度（0〜1）</summary>
     public AxisControl shake { get; private set; }
+    /// <summary>リールジェスチャーの強度（0〜1）</summary>
+    public AxisControl reel { get; private set; }
 
     public static SmartphoneDevice Current { get; private set; }
 
@@ -51,6 +53,7 @@ public class SmartphoneDevice : InputDevice
         rotate = GetChildControl<AxisControl>("rotate");
         cast = GetChildControl<AxisControl>("cast");
         shake = GetChildControl<AxisControl>("shake");
+        reel = GetChildControl<AxisControl>("reel");
     }
 
     public override void MakeCurrent()

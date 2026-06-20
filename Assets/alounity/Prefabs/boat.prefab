@@ -535,24 +535,24 @@ WheelCollider:
   m_GameObject: {fileID: 1371342236062536834}
   serializedVersion: 2
   m_Center: {x: -1, y: 0, z: 0}
-  m_Radius: 0.25
+  m_Radius: 0.4
   m_SuspensionSpring:
     spring: 8000
     damper: 1000
-    targetPosition: 0.5
-  m_SuspensionDistance: 0.3
+    targetPosition: 0
+  m_SuspensionDistance: 0.4
   m_ForceAppPointDistance: 0
-  m_Mass: 40
+  m_Mass: 10
   m_WheelDampingRate: 0.25
   m_ForwardFriction:
     m_ExtremumSlip: 0.4
-    m_ExtremumValue: 1
+    m_ExtremumValue: 3
     m_AsymptoteSlip: 0.8
     m_AsymptoteValue: 0.5
     m_Stiffness: 1
   m_SidewaysFriction:
     m_ExtremumSlip: 2
-    m_ExtremumValue: 1
+    m_ExtremumValue: 3
     m_AsymptoteSlip: 3
     m_AsymptoteValue: 2
     m_Stiffness: 0.5
@@ -730,6 +730,8 @@ GameObject:
   - component: {fileID: 5683864014274677544}
   - component: {fileID: 790172248304882792}
   - component: {fileID: 7823550431784627611}
+  - component: {fileID: 8535547367185760452}
+  - component: {fileID: 1586585902901568943}
   m_Layer: 0
   m_Name: Hook
   m_TagString: Untagged
@@ -748,7 +750,7 @@ Transform:
   m_LocalRotation: {x: 0, y: -1, z: 0, w: 0}
   m_LocalPosition: {x: -0.017, y: 1.172084, z: 0.888}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6180499460352781598}
   m_LocalEulerAnglesHint: {x: 0, y: -180, z: 0}
@@ -760,7 +762,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2710580782599153055}
   serializedVersion: 5
-  m_Mass: 1
+  m_Mass: 0.001
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -808,7 +810,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Hook
   lineAttachPoint: {fileID: 4906490513593294807}
-  fishPrefab: {fileID: 8585306600659894571, guid: ef6bc5c01679b440099e341aefb4face, type: 3}
 --- !u!135 &7823550431784627611
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -830,6 +831,63 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &8535547367185760452
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2710580782599153055}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1586585902901568943
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2710580782599153055}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &3123489268242889731
 GameObject:
   m_ObjectHideFlags: 0
@@ -1074,15 +1132,20 @@ MonoBehaviour:
   lineSpringJoint: {fileID: 7421196942546889635}
   springJointConfig: {fileID: 11400000, guid: 3637ec06e3f8f4414a102ba8c3a606b0, type: 2}
   horizontalInput: 0
+  fishPrefab: {fileID: 8585306600659894571, guid: ef6bc5c01679b440099e341aefb4face, type: 3}
   isDebugMode: 1
   rodRotationSpeed: 200
   rodMinRotation: -45
   rodMaxRotation: 45
   currentState: 0
-  castPower: 10
+  castPower: 0.1
   CatchRequiredShakeCount: 12
-  DropRequiredShakeCount: 5
-  minLineLength: 0.5
+  fishAcceraratePower: 0.5
+  smallAttackPowerThresholdValue: 0.3
+  middleAttackPowerThresholdValue: 0.6
+  bigAttackPowerThresholdValue: 0.7
+  swingFinishTimeMs: 1200
+  swingCoolTime: 3
 --- !u!1 &3558500417900078302
 GameObject:
   m_ObjectHideFlags: 0
@@ -1124,14 +1187,14 @@ WheelCollider:
   m_GameObject: {fileID: 3558500417900078302}
   serializedVersion: 2
   m_Center: {x: 1, y: 0, z: 0}
-  m_Radius: 0.25
+  m_Radius: 0.4
   m_SuspensionSpring:
     spring: 8000
     damper: 1000
-    targetPosition: 0.5
-  m_SuspensionDistance: 0.3
+    targetPosition: 0
+  m_SuspensionDistance: 0.4
   m_ForceAppPointDistance: 0
-  m_Mass: 40
+  m_Mass: 10
   m_WheelDampingRate: 0.25
   m_ForwardFriction:
     m_ExtremumSlip: 0.4
@@ -1294,9 +1357,9 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4914578745326805036}
   serializedVersion: 5
-  m_Mass: 100
+  m_Mass: 20
   m_LinearDamping: 0
-  m_AngularDamping: 0.05
+  m_AngularDamping: 0.6
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -1355,8 +1418,10 @@ MonoBehaviour:
   oarAnim:
   - {fileID: 3853295715153379179}
   - {fileID: 3505946411931753229}
-  inputValueThreshold: 0.3
-  power: 100
+  driveValueThreshold: 0.8
+  breakValueThreshold: 0.2
+  power: 30
+  breakPower: 30
 --- !u!1 &6181435908484529296
 GameObject:
   m_ObjectHideFlags: 0
