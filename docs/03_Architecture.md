@@ -64,7 +64,7 @@ sequenceDiagram
 
     Note over P,S: ルーム参加フェーズ
     P->>S: room:exists { roomId }
-    S-->>P: room:exists_ack { exists }
+    S-->>P: room:exists_ack { exists, availableRoles }
 
     P->>S: controller:connect { roomId, role }
     S-->>P: server:ack { received, playerId, error? }
@@ -95,7 +95,7 @@ sequenceDiagram
 | イベント名 | 方向 | データ |
 |---|---|---|
 | `room:exists` | スマホ → サーバー | `{ roomId: string }` |
-| `room:exists_ack` | サーバー → スマホ | `{ exists: boolean }` |
+| `room:exists_ack` | サーバー → スマホ | `{ exists: boolean, availableRoles?: string[] }` |
 | `controller:connect` | スマホ → サーバー | `{ roomId: string, role: string }` |
 | `server:ack` | サーバー → スマホ | `{ received: boolean, playerId?: string, error?: string }` |
 | `controller:sensor` | スマホ → サーバー | `{ roomId, role, accel, rotation, orientation, timestamp }` |
@@ -113,6 +113,8 @@ sequenceDiagram
 - ルームIDはサーバー側で採番（6文字英数字、I/O/0/1除外、30⁶通り）
 - ホスト（Unity）切断時に自動でルーム削除
 - 存在しないルームへの接続は `server:ack { received: false }` で拒否
+- 各役割は1つのデバイスのみ占有可能（同一ルーム内で重複接続不可）
+- プレイヤー切断時に役割が自動解放される
 
 ### 役割（role）の種類
 

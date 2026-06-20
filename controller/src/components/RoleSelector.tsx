@@ -5,9 +5,10 @@ import { PLAYER_ROLES } from "@/lib/types";
 
 interface RoleSelectorProps {
   onSelect: (role: PlayerRole) => void;
+  disabledRoles?: PlayerRole[];
 }
 
-export function RoleSelector({ onSelect }: RoleSelectorProps) {
+export function RoleSelector({ onSelect, disabledRoles = [] }: RoleSelectorProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-b from-blue-50 to-blue-100">
       <div className="max-w-md w-full">
@@ -17,17 +18,32 @@ export function RoleSelector({ onSelect }: RoleSelectorProps) {
         </div>
 
         <div className="space-y-4">
-          {PLAYER_ROLES.map((role) => (
-            <button
-              key={role.value}
-              type="button"
-              onClick={() => onSelect(role.value)}
-              className="w-full p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow text-left"
-            >
-              <div className="text-lg font-bold text-gray-800">{role.label}</div>
-              <div className="text-sm text-gray-600 mt-1">{role.description}</div>
-            </button>
-          ))}
+          {PLAYER_ROLES.map((role) => {
+            const isDisabled = disabledRoles.includes(role.value);
+            return (
+              <button
+                key={role.value}
+                type="button"
+                onClick={() => !isDisabled && onSelect(role.value)}
+                disabled={isDisabled}
+                className={`w-full p-4 rounded-lg shadow-md transition-shadow text-left ${
+                  isDisabled
+                    ? "bg-gray-200 opacity-60 cursor-not-allowed"
+                    : "bg-white hover:shadow-lg"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-lg font-bold text-gray-800">{role.label}</div>
+                  {isDisabled && (
+                    <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
+                      使用中
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm text-gray-600 mt-1">{role.description}</div>
+              </button>
+            );
+          })}
         </div>
 
         <p className="text-center text-xs text-gray-500 mt-8">
