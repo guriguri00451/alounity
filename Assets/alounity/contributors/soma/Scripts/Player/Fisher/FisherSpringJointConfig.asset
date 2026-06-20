@@ -20,10 +20,10 @@ MonoBehaviour:
     tolerance: 0.005
     enableCollision: 0
   waiting:
-    spring: 500
+    spring: 10
     damper: 0.2
     minDistance: 0
-    maxDistance: 20
+    maxDistance: 30
     tolerance: 0.025
     enableCollision: 0
   catching:

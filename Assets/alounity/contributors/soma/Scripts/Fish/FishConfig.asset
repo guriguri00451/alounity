@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24f67437e8fd94a76b19a32e78a83b20, type: 3}
+  m_Name: FishConfig
+  m_EditorClassIdentifier: Assembly-CSharp::FishConfig
+  fishes:
+  - prefab: {fileID: 1798119890976552468, guid: c4bad789e0cb53f46bed482061b45e97, type: 3}
+    spawnWeight: 6
+  - prefab: {fileID: 1798119890976552468, guid: bfb35e889456a444ca88a6a265aedc45, type: 3}
+    spawnWeight: 3
+  - prefab: {fileID: 6302653248774383446, guid: 300d2dee6e002254f832e855e5d9d49f, type: 3}
+    spawnWeight: 1

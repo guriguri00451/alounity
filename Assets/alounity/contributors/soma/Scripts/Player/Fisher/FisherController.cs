@@ -23,7 +23,7 @@ public class FisherController : MonoBehaviour
     [SerializeField] private float horizontalInput;
 
     [Header("Settings")]
-    [SerializeField] private GameObject fishPrefab;
+    [SerializeField] private FishConfig fishSettings;
     [SerializeField] private FishRumbleInput input;
     [SerializeField] private bool isDebugMode = false;
 
@@ -236,7 +236,7 @@ public class FisherController : MonoBehaviour
         if (currentState != FisherState.Waiting && caughtFish != null) return;
 
         hookRigidbody.isKinematic = true;
-        Fish fish = Instantiate(fishPrefab,hookTransform).GetComponent<Fish>();
+        Fish fish = Instantiate(fishSettings.GetFish(),hookTransform).GetComponent<Fish>();
         fish.PlayerID = playerID;
         _hook.CatchFish(fish.transform);
         caughtFish = fish.GetComponent<Fish>();

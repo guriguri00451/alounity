@@ -10,6 +10,8 @@ public class AppManager : MonoBehaviour
     // [SerializeField] TitleManager titleManager;
     [SerializeField] BattleManager battleManager;
     public int playerCount;
+    public PlayerData[] resultPlayersData;
+    public int winnerPlayerID;
     
     void Awake()
     {

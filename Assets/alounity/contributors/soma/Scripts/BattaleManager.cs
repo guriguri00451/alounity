@@ -12,10 +12,10 @@ namespace FishRumble
         [SerializeField] GameObject[] playerLocations;
         [SerializeField] GameObject playerPrefab;
         [SerializeField] int DeadCoolTimeMs;
-        [SerializeField]
         int[] playersLives;
         int winningTeamID;
         PlayerManager[] players;
+        PlayerData[] playersData;
 
         public void Start()
         {
@@ -79,9 +79,12 @@ namespace FishRumble
             }
             //UI真っ黒にする処理
         }
-        void FinishGame(int winnerPlayerID)
+        void FinishGame(int winnerID)
         {
-            
+            AppManager.Instance.winnerPlayerID = 0;
+            AppManager.Instance.resultPlayersData = null;
+            AppManager.Instance.winnerPlayerID = winnerID;
+            AppManager.Instance.resultPlayersData = playersData;
         }
 
         
