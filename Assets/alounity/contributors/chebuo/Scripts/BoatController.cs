@@ -9,8 +9,10 @@ public class BoatController : MonoBehaviour
     [SerializeField] InputActionProperty[] boat;
     [SerializeField] OarAnimSetter[] oarAnim;
     [Header("Parametor")]
-    [SerializeField] float inputValueThreshold = 0.3f;
+    [SerializeField] float driveValueThreshold = 0.8f;
+    [SerializeField] float breakValueThreshold = 0.2f;
     [SerializeField] float power=100;
+    [SerializeField] float breakPower = 100;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -23,14 +25,19 @@ public class BoatController : MonoBehaviour
         {
             float input = boat[i].action.ReadValue<float>();
 
-            if(input >= inputValueThreshold)
+            if(input >= driveValueThreshold)
             {
+                wheels[i].brakeTorque = 0;
                 wheels[i].motorTorque = input*power;
                 if(oarAnim.Length != 0) oarAnim[i].SetSpeed(input);
             }
+            else if(input >= breakValueThreshold)
+            {
+                if(oarAnim.Length != 0) oarAnim[i].SetSpeed(0);
+            }
             else
             {
-                wheels[i].motorTorque = 0;
+                wheels[i].brakeTorque = breakPower;
                 if(oarAnim.Length != 0) oarAnim[i].SetSpeed(0);
             }
             

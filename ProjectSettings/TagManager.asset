@@ -8,6 +8,7 @@ TagManager:
   - FishZone
   - KayakRider
   - HAND
+  - Obstacle
   layers:
   - Default
   - TransparentFX
