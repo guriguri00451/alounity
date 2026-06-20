@@ -11,30 +11,45 @@ interface FisherVisualProps {
 
 const SWING_THRESHOLD = 5;
 
-export function FisherVisual({ sensorData, team }: FisherVisualProps) {
-  const [isSwinging, setIsSwinging] = useState(false);
+type RodState = "idle" | "casting" | "reeling";
 
-  const swingForce = useMemo(() => {
-    if (!sensorData?.acceleration) return 0;
+export function FisherVisual({ sensorData, team }: FisherVisualProps) {
+  const [rodState, setRodState] = useState<RodState>("idle");
+  const [lastStateChange, setLastStateChange] = useState(0);
+
+  const { swingForce, zAccel } = useMemo(() => {
+    if (!sensorData?.acceleration) return { swingForce: 0, zAccel: 0 };
     const { x, y, z } = sensorData.acceleration;
-    return Math.sqrt((x ?? 0) ** 2 + (y ?? 0) ** 2 + (z ?? 0) ** 2);
+    const zVal = z ?? 0;
+    const force = Math.sqrt((x ?? 0) ** 2 + (y ?? 0) ** 2 + zVal ** 2);
+    return { swingForce: force, zAccel: zVal };
   }, [sensorData]);
 
   const normalizedForce = Math.min(Math.max((swingForce - SWING_THRESHOLD) / 15, 0), 1);
 
   useEffect(() => {
+    const now = Date.now();
+    if (now - lastStateChange < 300) return;
+
     if (swingForce > SWING_THRESHOLD) {
-      setIsSwinging(true);
-      const timer = setTimeout(() => setIsSwinging(false), 400);
-      return () => clearTimeout(timer);
+      if (zAccel < -SWING_THRESHOLD * 0.5) {
+        setRodState("casting");
+        setLastStateChange(now);
+      } else if (zAccel > SWING_THRESHOLD * 0.5) {
+        setRodState("reeling");
+        setLastStateChange(now);
+      }
+    } else if (rodState !== "idle" && now - lastStateChange > 400) {
+      setRodState("idle");
+      setLastStateChange(now);
     }
-  }, [swingForce]);
+  }, [swingForce, zAccel, rodState, lastStateChange]);
 
   const teamColor = team === "A" ? "#3B82F6" : "#EF4444";
   const teamColorLight = team === "A" ? "#93C5FD" : "#FCA5A5";
 
-  const rodBend = isSwinging ? -35 : 0;
-  const rodSwing = isSwinging ? 15 : 0;
+  const rodBend = rodState === "casting" ? -35 : rodState === "reeling" ? 15 : 0;
+  const rodSwing = rodState === "casting" ? 15 : rodState === "reeling" ? -8 : 0;
 
   return (
     <div className="relative flex flex-col items-center">
@@ -42,8 +57,8 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
         className="transition-transform origin-bottom"
         style={{
           transform: `rotate(${rodSwing}deg)`,
-          transitionDuration: isSwinging ? "150ms" : "400ms",
-          transitionTimingFunction: isSwinging ? "ease-out" : "ease-in",
+          transitionDuration: rodState === "casting" ? "150ms" : "300ms",
+          transitionTimingFunction: rodState === "casting" ? "ease-out" : "ease-in-out",
         }}
       >
         <svg
@@ -72,7 +87,9 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
             strokeLinecap="round"
             fill="none"
             className="transition-all"
-            style={{ transitionDuration: isSwinging ? "150ms" : "400ms" }}
+            style={{
+              transitionDuration: rodState === "casting" ? "150ms" : "300ms",
+            }}
           />
           <path
             d={`M80,240 Q80,190 80,140 Q80,100 ${85 + rodBend * 0.3},${70 + rodBend * 0.5} Q${87 + rodBend * 0.5},${40 + rodBend} ${90 + rodBend * 0.7},${20 + rodBend * 1.2}`}
@@ -82,7 +99,9 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
             strokeLinecap="round"
             fill="none"
             className="transition-all"
-            style={{ transitionDuration: isSwinging ? "150ms" : "400ms" }}
+            style={{
+              transitionDuration: rodState === "casting" ? "150ms" : "300ms",
+            }}
           />
 
           <circle
@@ -91,7 +110,9 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
             r="3"
             fill="#FFD700"
             className="transition-all"
-            style={{ transitionDuration: isSwinging ? "150ms" : "400ms" }}
+            style={{
+              transitionDuration: rodState === "casting" ? "150ms" : "300ms",
+            }}
           />
 
           <path
@@ -102,7 +123,9 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
             strokeDasharray="4,4"
             fill="none"
             className="transition-all"
-            style={{ transitionDuration: isSwinging ? "150ms" : "400ms" }}
+            style={{
+              transitionDuration: rodState === "casting" ? "150ms" : "300ms",
+            }}
           />
 
           <circle
@@ -112,7 +135,7 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
             fill="#FF6B35"
             stroke="white"
             strokeWidth="2"
-            className={isSwinging ? "animate-bounce" : ""}
+            className={rodState === "casting" ? "animate-bounce" : ""}
           />
           <circle cx={112} cy={140} r="3" fill="white" fillOpacity="0.5" />
 
@@ -140,7 +163,7 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
         <div className="text-white/80 text-sm font-bold">POWER</div>
       </div>
 
-      {isSwinging && (
+      {rodState === "casting" && (
         <div className="absolute top-8 left-1/2 -translate-x-1/2 flex gap-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
@@ -150,6 +173,12 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
               style={{ animationDelay: `${i * 0.05}s` }}
             />
           ))}
+        </div>
+      )}
+
+      {rodState === "reeling" && (
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 text-white/60 text-xs font-bold animate-pulse">
+          引き上げ中...
         </div>
       )}
     </div>
