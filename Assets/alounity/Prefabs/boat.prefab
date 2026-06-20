@@ -1171,7 +1171,7 @@ MonoBehaviour:
   currentState: 0
   castPower: 100
   CatchRequiredShakeCount: 12
-  fishAcceraratePower: 600
+  fishAcceraratePower: 100
   smallAttackPowerThresholdValue: 0.3
   middleAttackPowerThresholdValue: 0.6
   bigAttackPowerThresholdValue: 0.7
