@@ -1,5 +1,95 @@
 # 03_Architecture (クラス構造・タスク分割)
 
+## 0. システムアーキテクチャ
+
+```mermaid
+graph TB
+    subgraph スマホブラウザ["スマホブラウザ（コントローラー）"]
+        subgraph センサー入力["センサー入力"]
+            DM["DeviceMotionEvent<br/>加速度 (m/s²)"]
+            DO["DeviceOrientationEvent<br/>方位磁針 (度)"]
+        end
+        subgraph Next.js App["Next.js App Router"]
+            UI["UI コンポーネント<br/>React 19 + Tailwind CSS"]
+            SC["センサー収集<br/>30fps スロットリング"]
+            SIOC["Socket.IO Client"]
+        end
+        DM --> SC
+        DO --> SC
+        SC --> UI
+        UI --> SIOC
+    end
+
+    subgraph サーバー["Next.js Custom Server（通信中継）"]
+        HTTP["HTTP/HTTPS Server<br/>Node.js + tsx"]
+        SIOS["Socket.IO Server<br/>ポート 3000"]
+        ROOM["ルーム管理<br/>room:{roomId}"]
+        HTTP --> SIOS
+        SIOS --> ROOM
+    end
+
+    subgraph Unity["Unity 6（ゲームクライアント）"]
+        SIOU["Socket.IO Client<br/>（Unity WebSocket）"]
+        GM["GameManager<br/>Singleton"]
+        subgraph ゲームロジック["ゲームロジック"]
+            FC["FisherController<br/>釣り人の状態管理"]
+            BC["BoatController<br/>カヤック移動"]
+            CC["CameraController<br/>ボート追従カメラ"]
+            HM["HookMover<br/>釣り針の物理演算"]
+        end
+        SIOU --> GM
+        GM --> FC
+        GM --> BC
+        BC --> CC
+        FC --> HM
+    end
+
+    SIOC -- "controller:connect<br/>controller:sensor" --> SIOS
+    SIOS -- "sensor:data<br/>room:state" --> SIOU
+    SIOU -- "unity:connect" --> SIOS
+```
+
+### 通信フロー
+
+```mermaid
+sequenceDiagram
+    participant P as スマホブラウザ
+    participant S as Next.js Server
+    participant U as Unity
+
+    P->>S: controller:connect { roomId, role }
+    S-->>P: server:ack { playerId }
+    U->>S: unity:connect { roomId }
+
+    loop 30fps スロットリング
+        P->>S: controller:sensor { accel, rotation, orientation }
+        S->>U: sensor:data { playerId, role, accel, rotation, orientation }
+    end
+
+    S->>P: room:state { players, status }
+```
+
+### Socket.IO イベント設計
+
+| イベント名 | 方向 | データ |
+|---|---|---|
+| `controller:connect` | スマホ → サーバー | `{ roomId, role }` |
+| `controller:sensor` | スマホ → サーバー | `{ roomId, role, accel, rotation, orientation, timestamp }` |
+| `unity:connect` | Unity → サーバー | `{ roomId }` |
+| `sensor:data` | サーバー → Unity | `{ playerId, role, accel, rotation, orientation, timestamp }` |
+| `room:state` | サーバー → 全員 | `{ players: [...], status }` |
+| `server:ack` | サーバー → スマホ | `{ received, playerId }` |
+
+### 役割（role）の種類
+
+| role | 操作 | 使用センサー |
+|------|------|-------------|
+| `paddle_right` | 右オール（スマホを振る） | DeviceMotionEvent（加速度） |
+| `paddle_left` | 左オール（スマホを振る） | DeviceMotionEvent（加速度） |
+| `fisher` | 釣り（方位磁針で狙い → キャスト → 引き上げ） | DeviceOrientationEvent + DeviceMotionEvent |
+
+---
+
 ## 1. マイルストーンとタスク分け
 
 ### 【MVP】(最小限のプロダクト)
