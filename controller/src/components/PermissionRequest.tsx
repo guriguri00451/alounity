@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { OceanBackground } from "./OceanBackground";
 
-// DeviceMotionEvent/DeviceOrientationEventのrequestPermissionメソッド型定義
 interface PermissionRequestableEvent {
   requestPermission?: () => Promise<PermissionState>;
 }
@@ -28,7 +28,6 @@ export function PermissionRequest({
       let motionGranted = true;
       let orientationGranted = true;
 
-      // DeviceMotionEventの権限リクエスト（iOS 13+）
       const MotionEvent = DeviceMotionEvent as unknown as PermissionRequestableEvent;
       if (
         typeof DeviceMotionEvent !== "undefined" &&
@@ -38,7 +37,6 @@ export function PermissionRequest({
         motionGranted = motionPermission === "granted";
       }
 
-      // DeviceOrientationEventの権限リクエスト（iOS 13+）
       const OrientationEvent = DeviceOrientationEvent as unknown as PermissionRequestableEvent;
       if (
         typeof DeviceOrientationEvent !== "undefined" &&
@@ -55,8 +53,7 @@ export function PermissionRequest({
         setPermissionState("denied");
         onPermissionDenied?.();
       }
-    } catch (error) {
-      console.error("Permission request failed:", error);
+    } catch {
       setPermissionState("unsupported");
       onPermissionDenied?.();
     } finally {
@@ -64,60 +61,65 @@ export function PermissionRequest({
     }
   }, [onPermissionGranted, onPermissionDenied]);
 
-  // 権限が既に許可されている場合
   if (permissionState === "granted") {
     return null;
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold text-center mb-4">センサーアクセス許可</h1>
+    <div className="relative min-h-screen flex items-center justify-center p-4">
+      <OceanBackground />
 
-        {permissionState === "unsupported" && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
-            <p className="font-semibold">サポートされていないブラウザ</p>
-            <p className="text-sm">
-              このブラウザはDeviceMotion/DeviceOrientation APIをサポートしていません。 iOS
-              Safari（13+）またはChrome（Android）を使用してください。
-            </p>
+      <div className="relative z-10 w-full max-w-sm">
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 text-center animate-slide-up">
+          <div className="text-6xl mb-4 animate-bounce">📱</div>
+          <h1 className="text-2xl font-black text-gray-800 mb-2">センサー準備完了！</h1>
+          <p className="text-gray-600 text-sm mb-6">
+            ゲームを始めるには
+            <br />
+            センサーアクセスを許可してください
+          </p>
+
+          {permissionState === "unsupported" && (
+            <div className="mb-4 p-3 bg-red-100 rounded-xl">
+              <p className="font-bold text-red-700 text-sm">❌ 非対応ブラウザ</p>
+              <p className="text-xs text-red-600 mt-1">
+                iOS Safari（13+）またはChrome（Android）を使用してください。
+              </p>
+            </div>
+          )}
+
+          {permissionState === "denied" && (
+            <div className="mb-4 p-3 bg-yellow-100 rounded-xl">
+              <p className="font-bold text-yellow-700 text-sm">⚠️ 権限が拒否されました</p>
+              <p className="text-xs text-yellow-600 mt-1">
+                ブラウザの設定で権限を許可してください。
+              </p>
+            </div>
+          )}
+
+          <div className="mb-6 bg-gray-50 rounded-xl p-4 text-left">
+            <p className="text-xs font-bold text-gray-700 mb-2">🎮 使用するセンサー：</p>
+            <ul className="text-xs text-gray-600 space-y-1">
+              <li>
+                📳 <strong>加速度センサー</strong> — スマホを振る動作
+              </li>
+              <li>
+                🧭 <strong>ジャイロセンサー</strong> — 回転・向きを検出
+              </li>
+            </ul>
           </div>
-        )}
 
-        {permissionState === "denied" && (
-          <div className="mb-4 p-3 bg-yellow-100 text-yellow-700 rounded">
-            <p className="font-semibold">権限が拒否されました</p>
-            <p className="text-sm">
-              センサーデータを使用するには、ブラウザの設定で権限を許可してください。
-            </p>
-          </div>
-        )}
+          <button
+            type="button"
+            onClick={requestPermission}
+            disabled={isLoading}
+            className="w-full py-4 rounded-full font-black text-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "⏳ 許可中..." : "🚀 スタート！"}
+          </button>
 
-        <div className="mb-6 text-gray-700">
-          <p className="mb-2">このアプリは以下のセンサーを使用します：</p>
-          <ul className="list-disc list-inside space-y-1 text-sm">
-            <li>
-              <strong>加速度センサー</strong> - スマホを振る動作を検出
-            </li>
-            <li>
-              <strong>ジャイロセンサー</strong> - スマホの回転・向きを検出
-            </li>
-          </ul>
-          <p className="mt-3 text-sm text-gray-600">※ iOSの場合、HTTPS接続が必要です</p>
+          <p className="mt-3 text-xs text-gray-400">ボタンを押すと権限ダイアログが表示されます</p>
         </div>
-
-        <button
-          type="button"
-          onClick={requestPermission}
-          disabled={isLoading}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors"
-        >
-          {isLoading ? "許可をリクエスト中..." : "センサーアクセスを許可"}
-        </button>
-
-        <p className="mt-4 text-xs text-gray-500 text-center">
-          ボタンを押すとブラウザの権限ダイアログが表示されます
-        </p>
       </div>
     </div>
   );

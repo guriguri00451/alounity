@@ -3,10 +3,11 @@
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { io } from "socket.io-client";
+import { OceanBackground } from "@/components/OceanBackground";
 import { PermissionRequest } from "@/components/PermissionRequest";
+import { RoleControllerView } from "@/components/RoleControllerView";
 import { RoleSelector } from "@/components/RoleSelector";
 import { SensorDebugOverlay } from "@/components/SensorDebugOverlay";
-import { SensorDisplay } from "@/components/SensorDisplay";
 import { TeamSelector } from "@/components/TeamSelector";
 import { useDeviceMotion } from "@/hooks/useDeviceMotion";
 import { useSocket } from "@/hooks/useSocket";
@@ -30,7 +31,7 @@ export default function RoomPage() {
     throttleMs: 33,
   });
 
-  const { isConnected, playerId, connectionError, sendSensorData } = useSocket({
+  const { isConnected, connectionError, sendSensorData } = useSocket({
     roomId,
     role: role ?? "paddle_right",
     team: team ?? "A",
@@ -170,13 +171,13 @@ export default function RoomPage() {
 
   if (!isSupported) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">未対応ブラウザ</h1>
-          <p className="text-gray-700">
-            このブラウザはDeviceMotion/DeviceOrientation APIをサポートしていません。
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
+      <div className="relative min-h-screen flex items-center justify-center p-4">
+        <OceanBackground />
+        <div className="relative z-10 max-w-sm w-full bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 text-center">
+          <div className="text-5xl mb-4">📱</div>
+          <h1 className="text-xl font-black text-gray-800 mb-2">未対応ブラウザ</h1>
+          <p className="text-gray-600 text-sm">このブラウザはセンサーAPIをサポートしていません。</p>
+          <p className="text-xs text-gray-500 mt-3">
             iOS Safari（13+）またはChrome（Android）を使用してください。
           </p>
         </div>
@@ -186,10 +187,16 @@ export default function RoomPage() {
 
   if (rolesLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-b from-blue-50 to-blue-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">ルーム情報を取得中...</p>
+      <div className="relative min-h-screen flex items-center justify-center p-4">
+        <OceanBackground />
+        <div className="relative z-10 text-center">
+          <div className="text-6xl animate-bounce mb-4">🛶</div>
+          <p
+            className="text-white font-bold text-lg"
+            style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.3)" }}
+          >
+            ルームに接続中...
+          </p>
         </div>
       </div>
     );
@@ -200,10 +207,14 @@ export default function RoomPage() {
     const allFull = disabledTeams.length >= 2;
     if (allFull) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-b from-blue-50 to-blue-100">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">満席です</h1>
-            <p className="text-gray-700">両チームとも満席です。別のルームに参加してください。</p>
+        <div className="relative min-h-screen flex items-center justify-center p-4">
+          <OceanBackground />
+          <div className="relative z-10 max-w-sm w-full bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 text-center">
+            <div className="text-5xl mb-4">😵</div>
+            <h1 className="text-xl font-black text-red-600 mb-2">満席です</h1>
+            <p className="text-gray-600 text-sm">
+              両チームとも満席です。別のルームに参加してください。
+            </p>
           </div>
         </div>
       );
@@ -217,10 +228,12 @@ export default function RoomPage() {
     const allTaken = takenRolesInTeam.length >= ALL_ROLES.length;
     if (allTaken) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-b from-blue-50 to-blue-100">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">満席です</h1>
-            <p className="text-gray-700">
+        <div className="relative min-h-screen flex items-center justify-center p-4">
+          <OceanBackground team={currentTeam} />
+          <div className="relative z-10 max-w-sm w-full bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 text-center">
+            <div className="text-5xl mb-4">😵</div>
+            <h1 className="text-xl font-black text-red-600 mb-2">満席です</h1>
+            <p className="text-gray-600 text-sm">
               {currentTeam === "A" ? "チームA" : "チームB"}は全ての役割が使用中です。
             </p>
           </div>
@@ -240,73 +253,19 @@ export default function RoomPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <>
+      <OceanBackground team={team ?? undefined} />
       <SensorDebugOverlay sensorData={sensorData} isConnected={isConnected} role={role} />
-      <div className="max-w-2xl mx-auto space-y-4">
-        <header className="text-center py-4">
-          <h1 className="text-2xl font-bold text-gray-800">スマホコントローラー</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            ルーム: <span className="font-mono font-bold tracking-wider">{roomId}</span>
-            {gameMode === "versus" && (
-              <span className={`ml-2 font-bold ${team === "A" ? "text-blue-600" : "text-red-600"}`}>
-                {team === "A" ? "チームA" : "チームB"}
-              </span>
-            )}
-          </p>
-        </header>
-
-        <SensorDisplay sensorData={sensorData} />
-
-        <div className="bg-white rounded-lg shadow-md p-4 space-y-2">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">センサー状態</h3>
-          <div className="text-xs text-gray-600 space-y-1">
-            <p>
-              状態:{" "}
-              <span className={`font-semibold ${isListening ? "text-green-600" : "text-gray-500"}`}>
-                {isListening ? "リッスン中" : "停止中"}
-              </span>
-            </p>
-            <p>スロットル: 30fps (33ms)</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-4 space-y-2">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">接続状態</h3>
-          <div className="text-xs text-gray-600 space-y-1">
-            <p>
-              ルーム: <span className="font-mono font-semibold text-gray-800">{roomId}</span>
-            </p>
-            {gameMode === "versus" && (
-              <p>
-                チーム:{" "}
-                <span
-                  className={`font-semibold ${team === "A" ? "text-blue-600" : "text-red-600"}`}
-                >
-                  {team === "A" ? "チームA" : "チームB"}
-                </span>
-              </p>
-            )}
-            <p>
-              Socket.IO:{" "}
-              <span className={`font-semibold ${isConnected ? "text-green-600" : "text-red-500"}`}>
-                {isConnected ? "接続済み" : "未接続"}
-              </span>
-            </p>
-            {playerId && <p>プレイヤーID: {playerId.slice(0, 8)}...</p>}
-            {connectionError && <p className="text-red-500">{connectionError}</p>}
-          </div>
-        </div>
-
-        <div className="text-center pt-4">
-          <button
-            type="button"
-            onClick={handleToggleListening}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm"
-          >
-            {isListening ? "センサー停止" : "センサー再開"}
-          </button>
-        </div>
-      </div>
-    </div>
+      <RoleControllerView
+        role={role}
+        team={team ?? "A"}
+        sensorData={sensorData}
+        isConnected={isConnected}
+        isListening={isListening}
+        roomId={roomId}
+        gameMode={gameMode}
+        onToggleListening={handleToggleListening}
+      />
+    </>
   );
 }
