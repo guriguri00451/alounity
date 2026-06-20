@@ -25,7 +25,7 @@ export function useSocket(options: UseSocketOptions): UseSocketReturn {
     serverUrl = typeof window !== "undefined"
       ? `${window.location.protocol}//${window.location.hostname}:${window.location.port}`
       : "",
-    roomId = "default",
+    roomId = "",
     role,
     autoConnect = true,
   } = options;
@@ -69,6 +69,9 @@ export function useSocket(options: UseSocketOptions): UseSocketReturn {
     socket.on("server:ack", (data: ServerAckPayload) => {
       if (data.received && data.playerId) {
         setPlayerId(data.playerId);
+        setConnectionError(null);
+      } else if (!data.received && data.error) {
+        setConnectionError(data.error);
       }
     });
 

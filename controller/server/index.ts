@@ -7,8 +7,26 @@ import next from "next";
 import { Server } from "socket.io";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "0.0.0.0"; // すべてのネットワークインターフェースでリッスン
+const hostname = "0.0.0.0";
 const port = Number.parseInt(process.env.PORT || "3000", 10);
+
+// ルーム管理
+interface RoomState {
+  roomId: string;
+  hostId: string;
+  createdAt: number;
+}
+
+const rooms = new Map<string, RoomState>();
+
+function generateRoomId(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let id = "";
+  for (let i = 0; i < 6; i++) {
+    id += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return id;
+}
 
 // HTTPS設定
 const httpsEnabled = process.env.HTTPS === "true";
@@ -66,30 +84,93 @@ async function startServer() {
   io.on("connection", (socket) => {
     console.log(`[Socket.IO] Client connected: ${socket.id}`);
 
-    // コントローラー接続イベント
+    // --- ホスト（Unity）用イベント ---
+
+    // ルーム作成
+    socket.on("host:create", () => {
+      // 既にホストとしてルームを持っている場合は拒否
+      for (const [, room] of rooms) {
+        if (room.hostId === socket.id) {
+          socket.emit("host:create_ack", { ok: false, error: "既にルームを所有しています" });
+          return;
+        }
+      }
+
+      let roomId: string;
+      do {
+        roomId = generateRoomId();
+      } while (rooms.has(roomId));
+
+      rooms.set(roomId, {
+        roomId,
+        hostId: socket.id,
+        createdAt: Date.now(),
+      });
+
+      socket.join(`room:${roomId}`);
+      console.log(`[Room] 作成: ${roomId} (host: ${socket.id})`);
+      socket.emit("host:create_ack", { ok: true, roomId });
+    });
+
+    // ルーム閉鎖
+    socket.on("host:close", (data) => {
+      if (!data || typeof data !== "object") return;
+      const roomId = typeof data.roomId === "string" ? data.roomId : "";
+      const room = rooms.get(roomId);
+
+      if (!room || room.hostId !== socket.id) return;
+
+      rooms.delete(roomId);
+      io.to(`room:${roomId}`).emit("room:closed", { roomId, reason: "host_closed" });
+      console.log(`[Room] 閉鎖: ${roomId}`);
+    });
+
+    // --- コントローラー（スマホ）用イベント ---
+
+    // ルーム存在確認（事前検証用）
+    socket.on("room:exists", (data) => {
+      if (!data || typeof data !== "object") {
+        socket.emit("room:exists_ack", { exists: false });
+        return;
+      }
+      const roomId = typeof data.roomId === "string" ? data.roomId : "";
+      socket.emit("room:exists_ack", { exists: rooms.has(roomId) });
+    });
+
+    // コントローラー接続
     socket.on("controller:connect", (data) => {
       if (!data || typeof data !== "object") {
         socket.emit("server:ack", { received: false, error: "Invalid data" });
         return;
       }
-      const roomId = typeof data.roomId === "string" ? data.roomId : "default";
-      console.log(`[Socket.IO] Controller connected:`, data);
+
+      const roomId = typeof data.roomId === "string" ? data.roomId : "";
+
+      // ルーム存在確認
+      if (!roomId || !rooms.has(roomId)) {
+        socket.emit("server:ack", {
+          received: false,
+          error: "ルームが見つかりません",
+        });
+        return;
+      }
+
+      console.log(`[Controller] 参加: room:${roomId}`, data);
       socket.join(`room:${roomId}`);
       socket.emit("server:ack", { received: true, playerId: socket.id });
     });
 
-    // センサーデータ受信イベント（30fpsスロットリング）
+    // センサーデータ受信（30fpsスロットリング）
     socket.on("controller:sensor", (data) => {
       if (!data || typeof data !== "object") return;
-      const roomId = typeof data.roomId === "string" ? data.roomId : "default";
+      const roomId = typeof data.roomId === "string" ? data.roomId : "";
+      if (!roomId || !rooms.has(roomId)) return;
 
-      // 30fpsスロットリング（33ms間隔）
       const now = Date.now();
       const lastSent = socket.data.lastSensorSent || 0;
       if (now - lastSent < 33) return;
       socket.data.lastSensorSent = now;
 
-      // バリデーション済みのフィールドのみ転送
       const payload = {
         playerId: socket.id,
         role: typeof data.role === "string" ? data.role : "unknown",
@@ -99,21 +180,24 @@ async function startServer() {
           data.orientation && typeof data.orientation === "object" ? data.orientation : null,
         timestamp: typeof data.timestamp === "number" ? data.timestamp : Date.now(),
       };
-      console.log(`[Socket.IO] sensor:data → room:${roomId}`, payload);
       io.to(`room:${roomId}`).emit("sensor:data", payload);
     });
 
-    // Unity接続イベント
-    socket.on("unity:connect", (data) => {
-      if (!data || typeof data !== "object") return;
-      const roomId = typeof data.roomId === "string" ? data.roomId : "default";
-      console.log(`[Socket.IO] Unity connected:`, data, `→ joining room:${roomId}`);
-      socket.join(`room:${roomId}`);
-    });
+    // --- 共通イベント ---
 
-    // 切断イベント
+    // 切断
     socket.on("disconnect", (reason) => {
       console.log(`[Socket.IO] Client disconnected: ${socket.id}, reason: ${reason}`);
+
+      // ホスト切断 → ルーム削除
+      for (const [roomId, room] of rooms) {
+        if (room.hostId === socket.id) {
+          rooms.delete(roomId);
+          io.to(`room:${roomId}`).emit("room:closed", { roomId, reason: "host_disconnected" });
+          console.log(`[Room] 削除（ホスト切断）: ${roomId}`);
+          break;
+        }
+      }
     });
   });
 
