@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SensorData } from "@/hooks/useDeviceMotion";
 import type { Team } from "@/lib/types";
 
@@ -9,112 +9,47 @@ interface FisherVisualProps {
   team: Team;
 }
 
+const SWING_THRESHOLD = 5;
+
 export function FisherVisual({ sensorData, team }: FisherVisualProps) {
-  const direction = useMemo(() => {
-    if (!sensorData?.orientation) return 0;
-    return sensorData.orientation.alpha ?? 0;
+  const [isSwinging, setIsSwinging] = useState(false);
+
+  const swingForce = useMemo(() => {
+    if (!sensorData?.acceleration) return 0;
+    const { x, y, z } = sensorData.acceleration;
+    return Math.sqrt((x ?? 0) ** 2 + (y ?? 0) ** 2 + (z ?? 0) ** 2);
   }, [sensorData]);
 
-  const castForce = useMemo(() => {
-    if (!sensorData?.rotationRate) return 0;
-    const beta = sensorData.rotationRate.beta ?? 0;
-    return Math.min(Math.abs(beta) / 180, 1);
-  }, [sensorData]);
+  const normalizedForce = Math.min(Math.max((swingForce - SWING_THRESHOLD) / 15, 0), 1);
+
+  useEffect(() => {
+    if (swingForce > SWING_THRESHOLD) {
+      setIsSwinging(true);
+      const timer = setTimeout(() => setIsSwinging(false), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [swingForce]);
 
   const teamColor = team === "A" ? "#3B82F6" : "#EF4444";
   const teamColorLight = team === "A" ? "#93C5FD" : "#FCA5A5";
 
-  const rodBend = castForce * 20;
+  const rodBend = isSwinging ? -35 : 0;
+  const rodSwing = isSwinging ? 15 : 0;
 
   return (
     <div className="relative flex flex-col items-center">
-      <div className="relative">
-        <svg
-          width="180"
-          height="60"
-          viewBox="0 0 180 60"
-          fill="none"
-          className="mb-2"
-          role="img"
-          aria-label="方位磁針"
-        >
-          <circle
-            cx="90"
-            cy="30"
-            r="28"
-            fill="white"
-            fillOpacity="0.2"
-            stroke="white"
-            strokeOpacity="0.5"
-            strokeWidth="2"
-          />
-          <circle cx="90" cy="30" r="22" fill="white" fillOpacity="0.1" />
-
-          <text
-            x="90"
-            y="14"
-            textAnchor="middle"
-            fill="white"
-            fillOpacity="0.8"
-            fontSize="10"
-            fontWeight="bold"
-          >
-            N
-          </text>
-          <text
-            x="90"
-            y="54"
-            textAnchor="middle"
-            fill="white"
-            fillOpacity="0.5"
-            fontSize="10"
-            fontWeight="bold"
-          >
-            S
-          </text>
-          <text
-            x="116"
-            y="34"
-            textAnchor="middle"
-            fill="white"
-            fillOpacity="0.5"
-            fontSize="10"
-            fontWeight="bold"
-          >
-            E
-          </text>
-          <text
-            x="64"
-            y="34"
-            textAnchor="middle"
-            fill="white"
-            fillOpacity="0.5"
-            fontSize="10"
-            fontWeight="bold"
-          >
-            W
-          </text>
-
-          <g transform={`rotate(${direction}, 90, 30)`}>
-            <polygon points="90,8 86,22 94,22" fill={teamColor} />
-            <polygon points="90,52 86,38 94,38" fill="white" fillOpacity="0.5" />
-            <circle cx="90" cy="30" r="4" fill="white" />
-          </g>
-
-          <text x="90" y="34" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">
-            {Math.round(direction)}°
-          </text>
-        </svg>
-      </div>
-
       <div
-        className="transition-transform duration-150 ease-out origin-bottom"
-        style={{ transform: `rotate(${-rodBend}deg)` }}
+        className="transition-transform origin-bottom"
+        style={{
+          transform: `rotate(${rodSwing}deg)`,
+          transitionDuration: isSwinging ? "150ms" : "400ms",
+          transitionTimingFunction: isSwinging ? "ease-out" : "ease-in",
+        }}
       >
         <svg
           width="160"
-          height="220"
-          viewBox="0 0 160 220"
+          height="260"
+          viewBox="0 0 160 260"
           fill="none"
           role="img"
           aria-label="釣り竿のイラスト"
@@ -131,54 +66,90 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
           </defs>
 
           <path
-            d="M80,200 Q80,150 80,100 Q80,60 85,30 Q87,20 90,15"
+            d={`M80,240 Q80,190 80,140 Q80,100 ${85 + rodBend * 0.3},${70 + rodBend * 0.5} Q${87 + rodBend * 0.5},${40 + rodBend} ${90 + rodBend * 0.7},${20 + rodBend * 1.2}`}
             stroke="url(#rod-gradient)"
             strokeWidth="6"
             strokeLinecap="round"
             fill="none"
+            className="transition-all"
+            style={{ transitionDuration: isSwinging ? "150ms" : "400ms" }}
           />
           <path
-            d="M80,200 Q80,150 80,100 Q80,60 85,30 Q87,20 90,15"
+            d={`M80,240 Q80,190 80,140 Q80,100 ${85 + rodBend * 0.3},${70 + rodBend * 0.5} Q${87 + rodBend * 0.5},${40 + rodBend} ${90 + rodBend * 0.7},${20 + rodBend * 1.2}`}
             stroke="white"
             strokeOpacity="0.2"
             strokeWidth="2"
             strokeLinecap="round"
             fill="none"
+            className="transition-all"
+            style={{ transitionDuration: isSwinging ? "150ms" : "400ms" }}
           />
 
-          <circle cx="90" cy="15" r="3" fill="#FFD700" />
+          <circle
+            cx={90 + rodBend * 0.7}
+            cy={20 + rodBend * 1.2}
+            r="3"
+            fill="#FFD700"
+            className="transition-all"
+            style={{ transitionDuration: isSwinging ? "150ms" : "400ms" }}
+          />
 
           <path
-            d="M90,15 Q100,25 110,50 Q120,80 115,110"
+            d={`M${90 + rodBend * 0.7},${20 + rodBend * 1.2} Q${100 + rodBend * 0.5},${40 + rodBend * 0.8} ${110 + rodBend * 0.3},${70 + rodBend * 0.5} Q${115},${100} ${112},${140}`}
             stroke="white"
             strokeOpacity="0.6"
             strokeWidth="1"
             strokeDasharray="4,4"
             fill="none"
+            className="transition-all"
+            style={{ transitionDuration: isSwinging ? "150ms" : "400ms" }}
           />
 
-          <circle cx="115" cy="115" r="6" fill="#FF6B35" stroke="white" strokeWidth="2" />
-          <circle cx="115" cy="115" r="3" fill="white" fillOpacity="0.5" />
+          <circle
+            cx={112}
+            cy={140}
+            r="6"
+            fill="#FF6B35"
+            stroke="white"
+            strokeWidth="2"
+            className={isSwinging ? "animate-bounce" : ""}
+          />
+          <circle cx={112} cy={140} r="3" fill="white" fillOpacity="0.5" />
 
-          <rect x="72" y="170" width="16" height="40" rx="4" fill="url(#handle-gradient)" />
-          <rect x="70" y="165" width="20" height="8" rx="2" fill="#333" />
-          <rect x="70" y="208" width="20" height="8" rx="2" fill="#333" />
+          <rect x="72" y="210" width="16" height="40" rx="4" fill="url(#handle-gradient)" />
+          <rect x="70" y="205" width="20" height="8" rx="2" fill="#333" />
+          <rect x="70" y="248" width="20" height="8" rx="2" fill="#333" />
 
-          <circle cx="80" cy="155" r="12" fill="#555" stroke="#333" strokeWidth="2" />
-          <circle cx="80" cy="155" r="6" fill="#777" />
-          <circle cx="80" cy="155" r="2" fill="#333" />
+          <circle cx="80" cy="195" r="12" fill="#555" stroke="#333" strokeWidth="2" />
+          <circle cx="80" cy="195" r="6" fill="#777" />
+          <circle cx="80" cy="195" r="2" fill="#333" />
         </svg>
       </div>
 
-      {castForce > 0.1 && (
-        <div className="absolute top-16 right-4 flex flex-col items-center">
-          <div
-            className="text-3xl font-black"
-            style={{ color: "white", textShadow: "2px 2px 4px rgba(0,0,0,0.3)" }}
-          >
-            {Math.round(castForce * 100)}
-          </div>
-          <div className="text-white/80 text-xs font-bold">CAST</div>
+      <div className="mt-4 text-center">
+        <div
+          className="text-4xl font-black transition-all"
+          style={{
+            color: normalizedForce > 0.3 ? "#FFD700" : "white",
+            textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
+            transform: `scale(${1 + normalizedForce * 0.3})`,
+          }}
+        >
+          {Math.round(normalizedForce * 100)}
+        </div>
+        <div className="text-white/80 text-sm font-bold">POWER</div>
+      </div>
+
+      {isSwinging && (
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 flex gap-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: ephemeral spark animation
+              key={`spark-${i}`}
+              className="w-2 h-2 rounded-full bg-yellow-300 animate-splash"
+              style={{ animationDelay: `${i * 0.05}s` }}
+            />
+          ))}
         </div>
       )}
     </div>

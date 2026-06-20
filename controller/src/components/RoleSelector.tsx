@@ -17,7 +17,7 @@ const ROLE_CARDS: {
 }[] = [
   { value: "paddle_right", emoji: "🚣", label: "右オール", description: "スマホを振って漕ぐ！" },
   { value: "paddle_left", emoji: "🚣", label: "左オール", description: "スマホを振って漕ぐ！" },
-  { value: "fisher", emoji: "🎣", label: "釣り", description: "狙ってキャスト！" },
+  { value: "fisher", emoji: "🎣", label: "釣り", description: "スマホを振ってキャスト！" },
 ];
 
 export function RoleSelector({ onSelect, disabledRoles = [], team }: RoleSelectorProps) {

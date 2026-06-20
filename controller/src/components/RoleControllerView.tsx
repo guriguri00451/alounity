@@ -30,7 +30,7 @@ const ROLE_CONFIG: Record<PlayerRole, { label: string; emoji: string; instructio
   fisher: {
     label: "釣り",
     emoji: "🎣",
-    instruction: "方位磁針で狙ってキャスト！",
+    instruction: "スマホを振ってキャスト！",
   },
 };
 

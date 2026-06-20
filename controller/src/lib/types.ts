@@ -18,7 +18,7 @@ export const PLAYER_ROLES: { value: PlayerRole; label: string; description: stri
   {
     value: "fisher",
     label: "釣り",
-    description: "スマホを向けて狙い、キャスト/引き上げ",
+    description: "スマホを振ってキャスト/引き上げ",
   },
 ];
 
