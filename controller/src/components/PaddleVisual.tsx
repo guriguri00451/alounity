@@ -18,6 +18,8 @@ export function PaddleVisual({ sensorData, side, team }: PaddleVisualProps) {
   const [isStroking, setIsStroking] = useState(false);
   const [displayedPower, setDisplayedPower] = useState(0);
   const powerHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const strokeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wasAboveThresholdRef = useRef(false);
 
   const magnitude = useMemo(() => {
     if (!sensorData?.acceleration) return 0;
@@ -28,13 +30,20 @@ export function PaddleVisual({ sensorData, side, team }: PaddleVisualProps) {
   const normalizedForce = Math.min(Math.max((magnitude - SWING_THRESHOLD) / 15, 0), 1);
 
   useEffect(() => {
-    if (magnitude > SWING_THRESHOLD) {
+    const isAboveThreshold = magnitude > SWING_THRESHOLD;
+
+    if (isAboveThreshold && !wasAboveThresholdRef.current) {
       setIsStroking(true);
-    } else if (isStroking) {
-      const timer = setTimeout(() => setIsStroking(false), 300);
-      return () => clearTimeout(timer);
+      if (strokeTimerRef.current) {
+        clearTimeout(strokeTimerRef.current);
+      }
+      strokeTimerRef.current = setTimeout(() => {
+        setIsStroking(false);
+      }, 300);
     }
-  }, [magnitude, isStroking]);
+
+    wasAboveThresholdRef.current = isAboveThreshold;
+  }, [magnitude]);
 
   useEffect(() => {
     setDisplayedPower((prev) => Math.max(prev, normalizedForce));
@@ -53,6 +62,9 @@ export function PaddleVisual({ sensorData, side, team }: PaddleVisualProps) {
     return () => {
       if (powerHoldTimerRef.current) {
         clearTimeout(powerHoldTimerRef.current);
+      }
+      if (strokeTimerRef.current) {
+        clearTimeout(strokeTimerRef.current);
       }
     };
   }, []);
