@@ -11,10 +11,14 @@ const hostname = "0.0.0.0";
 const port = Number.parseInt(process.env.PORT || "3000", 10);
 
 // ルーム管理
+const VALID_ROLES = ["paddle_right", "paddle_left", "fisher"] as const;
+type ValidRole = (typeof VALID_ROLES)[number];
+
 interface RoomState {
   roomId: string;
   hostId: string;
   createdAt: number;
+  players: Map<string, ValidRole>; // socket.id → role
 }
 
 const rooms = new Map<string, RoomState>();
@@ -26,6 +30,13 @@ function generateRoomId(): string {
     id += chars[Math.floor(Math.random() * chars.length)];
   }
   return id;
+}
+
+function emitPlayersUpdate(io: Server, roomId: string) {
+  const room = rooms.get(roomId);
+  if (!room) return;
+  const takenRoles = Array.from(room.players.values());
+  io.to(`room:${roomId}`).emit("room:players_update", { takenRoles });
 }
 
 // HTTPS設定
@@ -105,6 +116,7 @@ async function startServer() {
         roomId,
         hostId: socket.id,
         createdAt: Date.now(),
+        players: new Map(),
       });
 
       socket.join(`room:${roomId}`);
@@ -127,14 +139,24 @@ async function startServer() {
 
     // --- コントローラー（スマホ）用イベント ---
 
-    // ルーム存在確認（事前検証用）
+    // ルーム存在確認（事前検証用 + リアルタイム更新用）
     socket.on("room:exists", (data) => {
       if (!data || typeof data !== "object") {
         socket.emit("room:exists_ack", { exists: false });
         return;
       }
       const roomId = typeof data.roomId === "string" ? data.roomId : "";
-      socket.emit("room:exists_ack", { exists: rooms.has(roomId) });
+      const room = rooms.get(roomId);
+      if (!room) {
+        socket.emit("room:exists_ack", { exists: false });
+        return;
+      }
+
+      // ルームに参加してリアルタイム更新を受け取る
+      socket.join(`room:${roomId}`);
+
+      const takenRoles = Array.from(room.players.values());
+      socket.emit("room:exists_ack", { exists: true, takenRoles });
     });
 
     // コントローラー接続
@@ -145,6 +167,7 @@ async function startServer() {
       }
 
       const roomId = typeof data.roomId === "string" ? data.roomId : "";
+      const role = typeof data.role === "string" ? data.role : "";
 
       // ルーム存在確認
       if (!roomId || !rooms.has(roomId)) {
@@ -155,9 +178,39 @@ async function startServer() {
         return;
       }
 
-      console.log(`[Controller] 参加: room:${roomId}`, data);
+      // 役割の妥当性チェック
+      if (!VALID_ROLES.includes(role as ValidRole)) {
+        socket.emit("server:ack", {
+          received: false,
+          error: "無効な役割です",
+        });
+        return;
+      }
+
+      const room = rooms.get(roomId)!;
+
+      // 役割の重複チェック
+      for (const [playerId, playerRole] of room.players) {
+        if (playerRole === role && playerId !== socket.id) {
+          socket.emit("server:ack", {
+            received: false,
+            error: "この役割は既に使用されています",
+          });
+          return;
+        }
+      }
+
+      // プレイヤーを登録
+      room.players.set(socket.id, role as ValidRole);
+      socket.data.roomId = roomId;
+      socket.data.role = role;
+
+      console.log(`[Controller] 参加: room:${roomId}, role:${role}, player:${socket.id}`);
       socket.join(`room:${roomId}`);
       socket.emit("server:ack", { received: true, playerId: socket.id });
+
+      // ルーム内の全クライアントに役割更新を通知
+      emitPlayersUpdate(io, roomId);
     });
 
     // センサーデータ受信（30fpsスロットリング）
@@ -188,6 +241,23 @@ async function startServer() {
     // 切断
     socket.on("disconnect", (reason) => {
       console.log(`[Socket.IO] Client disconnected: ${socket.id}, reason: ${reason}`);
+
+      // コントローラー切断 → ルームからプレイヤー削除
+      const controllerRoomId = socket.data.roomId as string | undefined;
+      if (controllerRoomId) {
+        const room = rooms.get(controllerRoomId);
+        if (room) {
+          const role = room.players.get(socket.id);
+          room.players.delete(socket.id);
+          if (role) {
+            console.log(
+              `[Controller] 退出: room:${controllerRoomId}, role:${role}, player:${socket.id}`
+            );
+            // ルーム内の全クライアントに役割更新を通知
+            emitPlayersUpdate(io, controllerRoomId);
+          }
+        }
+      }
 
       // ホスト切断 → ルーム削除
       for (const [roomId, room] of rooms) {
