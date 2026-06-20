@@ -10,7 +10,7 @@ interface FisherVisualProps {
 }
 
 const SWING_THRESHOLD = 90;
-const POWER_HOLD_DURATION = 800;
+const POWER_HOLD_DURATION = 400;
 
 type RodState = "idle" | "casting" | "reeling";
 
