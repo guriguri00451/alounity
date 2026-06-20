@@ -71,7 +71,12 @@ export default function Home() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRoomId(e.target.value.toUpperCase().replace(/[^A-Z2-9]/g, "").slice(0, 6));
+    setRoomId(
+      e.target.value
+        .toUpperCase()
+        .replace(/[^A-Z2-9]/g, "")
+        .slice(0, 6)
+    );
     setError("");
   };
 
