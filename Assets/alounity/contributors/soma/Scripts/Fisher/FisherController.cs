@@ -62,7 +62,6 @@ public class FisherController : MonoBehaviour
             if (Keyboard.current.digit2Key.wasPressedThisFrame) ManageState(FisherState.Waiting);
             if (Keyboard.current.digit3Key.wasPressedThisFrame) ManageState(FisherState.Catching);
             if (Keyboard.current.digit4Key.wasPressedThisFrame) ManageState(FisherState.Swinging);
-            if (Keyboard.current.spaceKey.wasPressedThisFrame) Shake();
         }
         RotateRod();
     }
@@ -104,16 +103,14 @@ public class FisherController : MonoBehaviour
     void ManageState(FisherState newState)
     {
         Debug.Log($"State changed: {currentState} -> {newState}");
-        springJointConfig.Get(currentState).ApplyTo(lineSpringJoint);
+        currentState = newState;
 
-        // Swinging から離脱するとき攻撃判定を無効にする
-        if (currentState == FisherState.Swinging && caughtFish != null)
-            caughtFish.SetAttackActive(false);
+        springJointConfig.Get(currentState).ApplyTo(lineSpringJoint);
 
         switch (newState)
         {
             case FisherState.Idle:
-                _hook.DropFish();
+                
                 break;
             case FisherState.Waiting:
                 _hook.Release();
@@ -128,7 +125,6 @@ public class FisherController : MonoBehaviour
                 caughtFish.SetAttackActive(true);
                 break;
         }
-        currentState = newState;
     }
 
     /// <summary>
@@ -145,14 +141,12 @@ public class FisherController : MonoBehaviour
     /// スマホを振る動作に対応する入力コールバック。
     /// Catching 中は糸を巻き上げ、Swinging 中は振り回し攻撃を行う。
     /// </summary>
-    void Shake(InputAction.CallbackContext _) => Shake();
-
-    void Shake()
+    void Shake(InputAction.CallbackContext input)
     {
         if (currentState == FisherState.Catching)
             PullingLine();
         else if (currentState == FisherState.Waiting ||currentState == FisherState.Swinging)
-            SwingAttack();
+            SwingAttack(input);
     }
 
     /// <summary>
@@ -171,7 +165,7 @@ public class FisherController : MonoBehaviour
     /// <summary>
     /// 振り回し攻撃。Shakeするたびに糸を縮め、minLineLengthまで巻き取ったらIdleに戻る。
     /// </summary>
-    void SwingAttack()
+    void SwingAttack(InputAction.CallbackContext _input)
     {
         ShortenLine();
         if (lineSpringJoint.maxDistance <= minLineLength)
@@ -190,5 +184,16 @@ public class FisherController : MonoBehaviour
         ManageState(FisherState.Catching);
         _hook.CatchFish(fish.transform);
         caughtFish = fish.GetComponent<Fish>();
+        caughtFish.onDepleted += DropFish;
+    }
+
+    void DropFish()
+    {
+        caughtFish.onDepleted -= DropFish;
+        if(caughtFish != null) 
+            caughtFish.SetAttackActive(false);
+        caughtFish = null;
+        _hook.ReleaseFish();
+
     }
 }

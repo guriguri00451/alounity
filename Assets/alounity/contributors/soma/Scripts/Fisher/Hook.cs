@@ -56,7 +56,7 @@ public class Hook : MonoBehaviour
     /// <summary>
     /// 魚を落として Idle に戻る。
     /// </summary>
-    public void DropFish()
+    public void ReleaseFish()
     {
         if(caughtFish != null)
         {
