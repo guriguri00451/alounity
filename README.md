@@ -105,6 +105,6 @@ npm run build      # プロダクションビルド
 - [技術標準](docs/02_TechStandard.md)
 - [アーキテクチャ](docs/03_Architecture.md)
 - [クラス図](docs/04_ClassDiagram.md)
-- [コントローラー実装計画](docs/controller-implementation-plan.md)
+- [コントローラー仕様書](docs/controller-implementation-plan.md)
 - [ルーム管理](docs/room-management-plan.md)
 - [QRコード実装](docs/qr-code-implementation.md)
