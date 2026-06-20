@@ -25,7 +25,7 @@ export default function RoomPage() {
   const [isListening, setIsListening] = useState(false);
   const [players, setPlayers] = useState<PlayerInfo[]>([]);
   const [rolesLoading, setRolesLoading] = useState(true);
-  const [gameMode, setGameMode] = useState<GameMode>("single");
+  const [gameMode, setGameMode] = useState<GameMode | null>(null);
 
   const { sensorData, isSupported, startListening, stopListening } = useDeviceMotion({
     throttleMs: 33,
@@ -38,7 +38,7 @@ export default function RoomPage() {
     autoConnect: role !== null && team !== null,
   });
 
-  // singleモードではチームAに自動設定
+  // singleモードではチームAに自動設定（gameMode確定後のみ）
   useEffect(() => {
     if (gameMode === "single" && team === null) {
       setTeam("A");
@@ -263,7 +263,7 @@ export default function RoomPage() {
         isConnected={isConnected}
         isListening={isListening}
         roomId={roomId}
-        gameMode={gameMode}
+        gameMode={gameMode!}
         onToggleListening={handleToggleListening}
       />
     </>
