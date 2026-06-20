@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using SocketIOClient;
 using UnityEngine;
 
@@ -80,7 +81,7 @@ public class SocketIOManager : MonoBehaviour
         OnConnected?.Invoke();
     }
 
-    void OnHostCreateAck(SocketIOResponse response)
+    Task OnHostCreateAck(IEventContext response)
     {
         try
         {
@@ -103,13 +104,15 @@ public class SocketIOManager : MonoBehaviour
             Debug.LogError($"[SocketIO] host:create_ack パースエラー: {e.Message}");
             ScheduleReconnect();
         }
+
+        return Task.CompletedTask;
     }
 
     public void CloseRoom()
     {
         if (socket != null && !string.IsNullOrEmpty(RoomId))
         {
-            _ = socket.EmitAsync("host:close", new { roomId = RoomId });
+            _ = socket.EmitAsync("host:close", new object[] { new { roomId = RoomId } });
         }
     }
 
@@ -140,7 +143,6 @@ public class SocketIOManager : MonoBehaviour
         if (socket != null)
         {
             CloseRoom();
-            socket.Off("host:create_ack");
             socket.OnConnected -= OnSocketConnected;
             socket.OnDisconnected -= OnSocketDisconnected;
             socket.OnError -= OnSocketError;
