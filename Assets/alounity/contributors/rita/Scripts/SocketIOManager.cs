@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using SocketIOClient;
 using UnityEngine;
 
@@ -12,11 +13,13 @@ public class SocketIOManager : MonoBehaviour
     static SocketIOManager instance;
     SocketIO socket;
     bool isReconnecting;
+    Uri serverUri;
 
     public static SocketIOManager Instance => instance;
     public SocketIO Socket => socket;
     public bool IsConnected { get; private set; }
     public string RoomId { get; private set; } = "";
+    public Uri ServerUri => serverUri;
 
     public event Action OnConnected;
     public event Action OnRoomCreated;
@@ -50,8 +53,9 @@ public class SocketIOManager : MonoBehaviour
         }
 
         RoomId = "";
+        serverUri = new Uri(serverUrl);
 
-        socket = new SocketIO(new Uri(serverUrl));
+        socket = new SocketIO(serverUri);
 
         socket.OnConnected += OnSocketConnected;
         socket.OnDisconnected += OnSocketDisconnected;
@@ -72,6 +76,9 @@ public class SocketIOManager : MonoBehaviour
 
     async void OnSocketConnected(object sender, EventArgs e)
     {
+        // メインスレッドに切り替える
+        await UniTask.SwitchToMainThread();
+        
         IsConnected = true;
         isReconnecting = false;
         Debug.Log($"[SocketIO] 接続完了: {serverUrl}");
@@ -81,7 +88,7 @@ public class SocketIOManager : MonoBehaviour
         OnConnected?.Invoke();
     }
 
-    Task OnHostCreateAck(IEventContext response)
+    async Task OnHostCreateAck(IEventContext response)
     {
         try
         {
@@ -91,6 +98,9 @@ public class SocketIOManager : MonoBehaviour
             {
                 RoomId = data.roomId;
                 Debug.Log($"[Room] 作成完了: {RoomId}");
+                
+                // メインスレッドに切り替えてからコールバックを呼び出す
+                await UniTask.SwitchToMainThread();
                 OnRoomCreated?.Invoke();
             }
             else
@@ -104,8 +114,6 @@ public class SocketIOManager : MonoBehaviour
             Debug.LogError($"[SocketIO] host:create_ack パースエラー: {e.Message}");
             ScheduleReconnect();
         }
-
-        return Task.CompletedTask;
     }
 
     public void CloseRoom()
