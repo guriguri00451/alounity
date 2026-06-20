@@ -34,12 +34,6 @@ graph TB
         SIB["SmartphoneInputBridge<br/>センサー→InputSystem変換<br/>_A + _B 両方購読"]
         SD["SmartphoneDevice<br/>カスタムInputDevice<br/>boatL / boatR / rotate<br/>cast / shake / reel"]
 
-        subgraph Inspectorバインド["Inspectorバインド（デバッグ用）"]
-            PE1["paddle_example<br/>右オール"]
-            PE2["paddle_example<br/>左オール"]
-            FE["fisher_example<br/>釣り"]
-        end
-
         subgraph ゲームロジック["ゲームロジック"]
             FC["FisherController<br/>釣り人の状態管理"]
             BC["BoatController<br/>カヤック移動<br/>WheelCollider"]
@@ -48,7 +42,6 @@ graph TB
 
         SIOU --> SDR
         SDR -. "onPaddleRightInput_A/B<br/>onPaddleLeftInput_A/B<br/>onFisherInput_A/B" .-> SIB
-        SDR -. "onPaddleRightInput_A/B<br/>onPaddleLeftInput_A/B<br/>onFisherInput_A/B" .-> Inspectorバインド
         SIB --> SD
         SD -. "InputSystem" .-> ゲームロジック
     end
