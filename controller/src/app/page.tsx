@@ -2,13 +2,46 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { io } from "socket.io-client";
 
 export default function Home() {
   const router = useRouter();
   const [roomId, setRoomId] = useState("");
   const [error, setError] = useState("");
+  const [isChecking, setIsChecking] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const checkRoomExists = (id: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const serverUrl = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
+      const socket = io(serverUrl, {
+        transports: ["websocket", "polling"],
+        reconnection: false,
+      });
+
+      const timeout = setTimeout(() => {
+        socket.disconnect();
+        resolve(false);
+      }, 5000);
+
+      socket.on("connect", () => {
+        socket.emit("room:exists", { roomId: id });
+      });
+
+      socket.on("room:exists_ack", (data) => {
+        clearTimeout(timeout);
+        socket.disconnect();
+        resolve(data.exists === true);
+      });
+
+      socket.on("connect_error", () => {
+        clearTimeout(timeout);
+        socket.disconnect();
+        resolve(false);
+      });
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const trimmed = roomId.trim().toUpperCase();
@@ -20,6 +53,17 @@ export default function Home() {
 
     if (!/^[A-Z2-9]+$/.test(trimmed)) {
       setError("使用できない文字が含まれています（I, O, 0, 1は使用できません）");
+      return;
+    }
+
+    setIsChecking(true);
+    setError("");
+
+    const exists = await checkRoomExists(trimmed);
+    setIsChecking(false);
+
+    if (!exists) {
+      setError("ルームが見つかりません");
       return;
     }
 
@@ -51,7 +95,8 @@ export default function Home() {
               onChange={handleChange}
               placeholder="例: ABC123"
               maxLength={6}
-              className="w-full text-center text-2xl tracking-[0.5em] font-mono px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent uppercase placeholder:text-gray-300 placeholder:tracking-normal"
+              disabled={isChecking}
+              className="w-full text-center text-2xl tracking-[0.5em] font-mono px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent uppercase placeholder:text-gray-300 placeholder:tracking-normal disabled:bg-gray-100 disabled:text-gray-400"
               autoComplete="off"
             />
             <p className="text-xs text-gray-500 mt-2 text-center">
@@ -67,9 +112,10 @@ export default function Home() {
 
           <button
             type="submit"
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-lg"
+            disabled={isChecking}
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold rounded-lg shadow-md transition-colors text-lg"
           >
-            参加する
+            {isChecking ? "確認中..." : "参加する"}
           </button>
         </form>
       </div>
