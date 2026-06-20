@@ -1082,7 +1082,7 @@ MonoBehaviour:
   castPower: 10
   CatchRequiredShakeCount: 12
   DropRequiredShakeCount: 5
-  swingTimeoutSeconds: 1
+  minLineLength: 0.5
 --- !u!1 &3558500417900078302
 GameObject:
   m_ObjectHideFlags: 0
