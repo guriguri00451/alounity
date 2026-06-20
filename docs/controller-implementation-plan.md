@@ -106,7 +106,7 @@ Unity
 | イベント名 | 方向 | データ |
 |---|---|---|
 | `room:exists` | スマホ → サーバー | `{ roomId: string }` |
-| `room:exists_ack` | サーバー → スマホ | `{ exists: boolean }` |
+| `room:exists_ack` | サーバー → スマホ | `{ exists: boolean, availableRoles?: string[] }` |
 | `controller:connect` | スマホ → サーバー | `{ roomId: string, role: string }` |
 | `server:ack` | サーバー → スマホ | `{ received: boolean, playerId?: string, error?: string }` |
 | `controller:sensor` | スマホ → サーバー | `{ roomId, role, accel, rotation, orientation, timestamp }` |
@@ -283,11 +283,14 @@ Unity API（`Texture2D`生成、`Debug.Log`など）を使う前に `UniTask.Swi
 #### 5-1. サーバー側ルーム管理
 
 - `Map<string, RoomState>` でアクティブルームをインメモリ管理
+- `RoomState.players` で各プレイヤーの役割を管理（`Map<socketId, role>`）
 - `generateRoomId()` で6文字英数字を生成（I/O/0/1除外、30⁶通り）
 - `host:create` / `host:create_ack` イベントでルーム作成（サーバー採番）
 - `host:close` イベントでルーム閉鎖
-- `room:exists` / `room:exists_ack` イベントで事前存在確認
+- `room:exists` / `room:exists_ack` イベントで事前存在確認 + 空き役割リスト返却
 - ホスト切断時に自動ルーム削除
+- 同一役割への重複接続を拒否（`server:ack { received: false, error: "この役割は既に使用されています" }`）
+- プレイヤー切断時に役割を自動解放
 
 #### 5-2. Unity側ルーム作成
 
@@ -299,8 +302,10 @@ Unity API（`Texture2D`生成、`Debug.Log`など）を使う前に `UniTask.Swi
 #### 5-3. コントローラー側ルーム参加
 
 - `/` ページ: ルームID入力フォーム（6文字、大文字自動変換）
-- `/room/[roomId]` ページ: コントローラー画面（役割選択 → センサー送信）
-- `room:exists` で事前検証 → 存在しないルームはエラー表示
+- `/room/[roomId]` ページ: コントローラー画面
+  - ページ読み込み時に空き役割を取得 → 使用中の役割はグレーアウト＋「使用中」バッジ表示
+  - 全役割使用中の場合は「満席です」画面を表示
+  - 役割選択後にエラー（他デバイスに取られた場合）は役割選択画面に戻る
 
 ### Phase 6: QRコード生成 ✅ 完了
 
