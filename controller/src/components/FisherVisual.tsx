@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { SensorData } from "@/hooks/useDeviceMotion";
 import type { Team } from "@/lib/types";
 
@@ -10,12 +10,15 @@ interface FisherVisualProps {
 }
 
 const SWING_THRESHOLD = 30;
+const POWER_HOLD_DURATION = 800;
 
 type RodState = "idle" | "casting" | "reeling";
 
 export function FisherVisual({ sensorData, team }: FisherVisualProps) {
   const [rodState, setRodState] = useState<RodState>("idle");
   const [lastStateChange, setLastStateChange] = useState(0);
+  const [displayedPower, setDisplayedPower] = useState(0);
+  const powerHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { swingForce, zAccel } = useMemo(() => {
     if (!sensorData?.acceleration) return { swingForce: 0, zAccel: 0 };
@@ -26,6 +29,27 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
   }, [sensorData]);
 
   const normalizedForce = Math.min(Math.max((swingForce - SWING_THRESHOLD) / 15, 0), 1);
+
+  useEffect(() => {
+    setDisplayedPower((prev) => Math.max(prev, normalizedForce));
+
+    if (normalizedForce > 0) {
+      if (powerHoldTimerRef.current) {
+        clearTimeout(powerHoldTimerRef.current);
+      }
+      powerHoldTimerRef.current = setTimeout(() => {
+        setDisplayedPower(0);
+      }, POWER_HOLD_DURATION);
+    }
+  }, [normalizedForce]);
+
+  useEffect(() => {
+    return () => {
+      if (powerHoldTimerRef.current) {
+        clearTimeout(powerHoldTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const now = Date.now();
@@ -153,12 +177,12 @@ export function FisherVisual({ sensorData, team }: FisherVisualProps) {
         <div
           className="text-4xl font-black transition-all"
           style={{
-            color: normalizedForce > 0.3 ? "#FFD700" : "white",
+            color: displayedPower > 0.3 ? "#FFD700" : "white",
             textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
-            transform: `scale(${1 + normalizedForce * 0.3})`,
+            transform: `scale(${1 + displayedPower * 0.3})`,
           }}
         >
-          {Math.round(normalizedForce * 100)}
+          {Math.round(displayedPower * 100)}
         </div>
         <div className="text-white/80 text-sm font-bold">POWER</div>
       </div>
