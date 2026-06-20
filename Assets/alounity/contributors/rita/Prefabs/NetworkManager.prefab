@@ -64,7 +64,7 @@ MonoBehaviour:
   onSensorDataReceived:
     m_PersistentCalls:
       m_Calls: []
-  onPaddleRightInput:
+  onPaddleRightInput_A:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
@@ -79,7 +79,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  onPaddleLeftInput:
+  onPaddleLeftInput_A:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
@@ -94,7 +94,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  onFisherInput:
+  onFisherInput_A:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}

@@ -14,11 +14,23 @@ const port = Number.parseInt(process.env.PORT || "3000", 10);
 const VALID_ROLES = ["paddle_right", "paddle_left", "fisher"] as const;
 type ValidRole = (typeof VALID_ROLES)[number];
 
+const TEAMS = ["A", "B"] as const;
+type Team = (typeof TEAMS)[number];
+
+const GAME_MODES = ["single", "versus"] as const;
+type GameMode = (typeof GAME_MODES)[number];
+
+interface PlayerData {
+  role: ValidRole;
+  team: Team;
+}
+
 interface RoomState {
   roomId: string;
   hostId: string;
   createdAt: number;
-  players: Map<string, ValidRole>; // socket.id → role
+  gameMode: GameMode;
+  players: Map<string, PlayerData>; // socket.id → { role, team }
 }
 
 const rooms = new Map<string, RoomState>();
@@ -35,8 +47,12 @@ function generateRoomId(): string {
 function emitPlayersUpdate(io: Server, roomId: string) {
   const room = rooms.get(roomId);
   if (!room) return;
-  const takenRoles = Array.from(room.players.values());
-  io.to(`room:${roomId}`).emit("room:players_update", { takenRoles });
+  const players = Array.from(room.players.entries()).map(([playerId, data]) => ({
+    playerId,
+    role: data.role,
+    team: data.team,
+  }));
+  io.to(`room:${roomId}`).emit("room:players_update", { players });
 }
 
 // HTTPS設定
@@ -98,7 +114,7 @@ async function startServer() {
     // --- ホスト（Unity）用イベント ---
 
     // ルーム作成
-    socket.on("host:create", () => {
+    socket.on("host:create", (data) => {
       // 既にホストとしてルームを持っている場合は拒否
       for (const [, room] of rooms) {
         if (room.hostId === socket.id) {
@@ -106,6 +122,9 @@ async function startServer() {
           return;
         }
       }
+
+      const gameMode: GameMode =
+        data && typeof data === "object" && data.gameMode === "versus" ? "versus" : "single";
 
       let roomId: string;
       do {
@@ -116,12 +135,13 @@ async function startServer() {
         roomId,
         hostId: socket.id,
         createdAt: Date.now(),
+        gameMode,
         players: new Map(),
       });
 
       socket.join(`room:${roomId}`);
-      console.log(`[Room] 作成: ${roomId} (host: ${socket.id})`);
-      socket.emit("host:create_ack", { ok: true, roomId });
+      console.log(`[Room] 作成: ${roomId} (host: ${socket.id}, mode: ${gameMode})`);
+      socket.emit("host:create_ack", { ok: true, roomId, gameMode });
     });
 
     // ルーム閉鎖
@@ -155,8 +175,19 @@ async function startServer() {
       // ルームに参加してリアルタイム更新を受け取る
       socket.join(`room:${roomId}`);
 
-      const takenRoles = Array.from(room.players.values());
-      socket.emit("room:exists_ack", { exists: true, takenRoles });
+      // チーム別の占有状態を構築
+      const takenRoles: Record<string, string[]> = {};
+      for (const team of TEAMS) {
+        takenRoles[team] = Array.from(room.players.values())
+          .filter((p) => p.team === team)
+          .map((p) => p.role);
+      }
+
+      socket.emit("room:exists_ack", {
+        exists: true,
+        gameMode: room.gameMode,
+        takenRoles,
+      });
     });
 
     // コントローラー接続
@@ -168,6 +199,7 @@ async function startServer() {
 
       const roomId = typeof data.roomId === "string" ? data.roomId : "";
       const role = typeof data.role === "string" ? data.role : "";
+      const team = typeof data.team === "string" ? data.team : "A";
 
       // ルーム存在確認
       if (!roomId || !rooms.has(roomId)) {
@@ -189,9 +221,31 @@ async function startServer() {
 
       const room = rooms.get(roomId)!;
 
-      // 役割の重複チェック
-      for (const [playerId, playerRole] of room.players) {
-        if (playerRole === role && playerId !== socket.id) {
+      // チームの妥当性チェック
+      if (!TEAMS.includes(team as Team)) {
+        socket.emit("server:ack", {
+          received: false,
+          error: "無効なチームです",
+        });
+        return;
+      }
+
+      // singleモードではチームAのみ許可
+      if (room.gameMode === "single" && team !== "A") {
+        socket.emit("server:ack", {
+          received: false,
+          error: "このモードではチームAのみ選択できます",
+        });
+        return;
+      }
+
+      // チーム内での役割の重複チェック
+      for (const [playerId, playerData] of room.players) {
+        if (
+          playerData.role === role &&
+          playerData.team === (team as Team) &&
+          playerId !== socket.id
+        ) {
           socket.emit("server:ack", {
             received: false,
             error: "この役割は既に使用されています",
@@ -201,11 +255,14 @@ async function startServer() {
       }
 
       // プレイヤーを登録
-      room.players.set(socket.id, role as ValidRole);
+      room.players.set(socket.id, { role: role as ValidRole, team: team as Team });
       socket.data.roomId = roomId;
       socket.data.role = role;
+      socket.data.team = team;
 
-      console.log(`[Controller] 参加: room:${roomId}, role:${role}, player:${socket.id}`);
+      console.log(
+        `[Controller] 参加: room:${roomId}, team:${team}, role:${role}, player:${socket.id}`
+      );
       socket.join(`room:${roomId}`);
       socket.emit("server:ack", { received: true, playerId: socket.id });
 
@@ -227,6 +284,7 @@ async function startServer() {
       const payload = {
         playerId: socket.id,
         role: typeof data.role === "string" ? data.role : "unknown",
+        team: (socket.data.team as string) || "A",
         accel: data.accel && typeof data.accel === "object" ? data.accel : null,
         rotation: data.rotation && typeof data.rotation === "object" ? data.rotation : null,
         orientation:
@@ -247,11 +305,11 @@ async function startServer() {
       if (controllerRoomId) {
         const room = rooms.get(controllerRoomId);
         if (room) {
-          const role = room.players.get(socket.id);
+          const playerData = room.players.get(socket.id);
           room.players.delete(socket.id);
-          if (role) {
+          if (playerData) {
             console.log(
-              `[Controller] 退出: room:${controllerRoomId}, role:${role}, player:${socket.id}`
+              `[Controller] 退出: room:${controllerRoomId}, team:${playerData.team}, role:${playerData.role}, player:${socket.id}`
             );
             // ルーム内の全クライアントに役割更新を通知
             emitPlayersUpdate(io, controllerRoomId);

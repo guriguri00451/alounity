@@ -130,8 +130,8 @@ npm run build      # プロダクションビルド
 
 | イベント名 | 方向 | データ |
 |---|---|---|
-| `host:create` | Unity → サーバー | `{}` |
-| `host:create_ack` | サーバー → Unity | `{ ok: boolean, roomId?: string, error?: string }` |
+| `host:create` | Unity → サーバー | `{ gameMode?: "single" \| "versus" }` |
+| `host:create_ack` | サーバー → Unity | `{ ok: boolean, roomId?: string, gameMode?: string, error?: string }` |
 | `host:close` | Unity → サーバー | `{ roomId: string }` |
 
 ### コントローラー（スマホ）用イベント
@@ -139,31 +139,38 @@ npm run build      # プロダクションビルド
 | イベント名 | 方向 | データ |
 |---|---|---|
 | `room:exists` | スマホ → サーバー | `{ roomId: string }` |
-| `room:exists_ack` | サーバー → スマホ | `{ exists: boolean, availableRoles?: string[] }` |
-| `controller:connect` | スマホ → サーバー | `{ roomId: string, role: string }` |
+| `room:exists_ack` | サーバー → スマホ | `{ exists: boolean, gameMode?: string, takenRoles?: Record<string, string[]> }` |
+| `controller:connect` | スマホ → サーバー | `{ roomId: string, role: string, team: string }` |
 | `server:ack` | サーバー → スマホ | `{ received: boolean, playerId?: string, error?: string }` |
-| `controller:sensor` | スマホ → サーバー | `{ roomId, role, accel, rotation, orientation, timestamp }` |
+| `controller:sensor` | スマホ → サーバー | `{ roomId, role, team, accel, rotation, orientation, timestamp }` |
 
 ### 共通イベント
 
 | イベント名 | 方向 | データ |
 |---|---|---|
-| `sensor:data` | サーバー → Unity | `{ playerId, role, accel, rotation, orientation, timestamp }` |
+| `sensor:data` | サーバー → Unity | `{ playerId, role, team, accel, rotation, orientation, timestamp }` |
 | `room:closed` | サーバー → スマホ | `{ roomId: string, reason: string }` |
+| `room:players_update` | サーバー → スマホ | `{ players: { playerId, role, team }[] }` |
 
 ### ルーム管理
 
 - サーバーが `Map<string, RoomState>` でアクティブルームをインメモリ管理
 - ルームIDはサーバー側で採番（6文字英数字、I/O/0/1除外）
 - ホスト（Unity）切断時に自動でルーム削除
-- 各役割は1つのデバイスのみ占有可能（同一ルーム内で重複接続不可）
+- 各役割は1つのデバイスのみ占有可能（同一チーム内で重複接続不可）
 - プレイヤー切断時に役割が自動解放される
+- ゲームモード: `single`（1チーム3人）、`versus`（2チーム3vs3）
 
 ### 役割（role）の種類
 
 - `paddle_right`: 右オール担当（1名のみ）
 - `paddle_left`: 左オール担当（1名のみ）
 - `fisher`: 釣り担当（1名のみ）
+
+### チーム
+
+- `A`: チームA（singleモードでは全員がチームA）
+- `B`: チームB（versusモードのみ）
 
 ## センサーデータ形式
 

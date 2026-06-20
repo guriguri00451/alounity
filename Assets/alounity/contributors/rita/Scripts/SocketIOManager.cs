@@ -6,7 +6,10 @@ using UnityEngine;
 
 public class SocketIOManager : MonoBehaviour
 {
+    public enum GameMode { Single, Versus }
+
     [SerializeField] string serverUrl = "http://localhost:3000";
+    [SerializeField] GameMode gameMode = GameMode.Versus;
     [SerializeField] bool autoConnect = true;
     [SerializeField] float reconnectDelay = 3f;
 
@@ -20,6 +23,8 @@ public class SocketIOManager : MonoBehaviour
     public bool IsConnected { get; private set; }
     public string RoomId { get; private set; } = "";
     public Uri ServerUri => serverUri;
+    public GameMode Mode => gameMode;
+    public string GameModeString => gameMode == GameMode.Versus ? "versus" : "single";
 
     public event Action OnConnected;
     public event Action OnRoomCreated;
@@ -83,7 +88,7 @@ public class SocketIOManager : MonoBehaviour
         isReconnecting = false;
         Debug.Log($"[SocketIO] 接続完了: {serverUrl}");
 
-        await socket.EmitAsync("host:create");
+        await socket.EmitAsync("host:create", new object[] { new { gameMode = GameModeString } });
 
         OnConnected?.Invoke();
     }
@@ -97,7 +102,11 @@ public class SocketIOManager : MonoBehaviour
             if (data.ok)
             {
                 RoomId = data.roomId;
-                Debug.Log($"[Room] 作成完了: {RoomId}");
+                if (!string.IsNullOrEmpty(data.gameMode))
+                {
+                    gameMode = data.gameMode == "versus" ? GameMode.Versus : GameMode.Single;
+                }
+                Debug.Log($"[Room] 作成完了: {RoomId} (mode: {gameMode})");
                 
                 // メインスレッドに切り替えてからコールバックを呼び出す
                 await UniTask.SwitchToMainThread();

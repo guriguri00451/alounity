@@ -35,18 +35,24 @@ public class SmartphoneInputBridge : MonoBehaviour
             Debug.LogError("[SmartphoneInputBridge] SensorDataReceiver が未設定です。Inspector で設定してください。");
             return;
         }
-        receiver.onPaddleLeftInput.AddListener(ApplyPaddleLeft);
-        receiver.onPaddleRightInput.AddListener(ApplyPaddleRight);
-        receiver.onFisherInput.AddListener(ApplyFisher);
+        receiver.onPaddleLeftInput_A.AddListener(ApplyPaddleLeft);
+        receiver.onPaddleLeftInput_B.AddListener(ApplyPaddleLeft);
+        receiver.onPaddleRightInput_A.AddListener(ApplyPaddleRight);
+        receiver.onPaddleRightInput_B.AddListener(ApplyPaddleRight);
+        receiver.onFisherInput_A.AddListener(ApplyFisher);
+        receiver.onFisherInput_B.AddListener(ApplyFisher);
     }
 
     void OnDestroy()
     {
         if (receiver != null)
         {
-            receiver.onPaddleLeftInput.RemoveListener(ApplyPaddleLeft);
-            receiver.onPaddleRightInput.RemoveListener(ApplyPaddleRight);
-            receiver.onFisherInput.RemoveListener(ApplyFisher);
+            receiver.onPaddleLeftInput_A.RemoveListener(ApplyPaddleLeft);
+            receiver.onPaddleLeftInput_B.RemoveListener(ApplyPaddleLeft);
+            receiver.onPaddleRightInput_A.RemoveListener(ApplyPaddleRight);
+            receiver.onPaddleRightInput_B.RemoveListener(ApplyPaddleRight);
+            receiver.onFisherInput_A.RemoveListener(ApplyFisher);
+            receiver.onFisherInput_B.RemoveListener(ApplyFisher);
         }
         if (device != null && device.added)
             InputSystem.RemoveDevice(device);
