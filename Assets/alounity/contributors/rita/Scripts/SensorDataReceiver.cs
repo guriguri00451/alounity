@@ -21,6 +21,10 @@ public class SensorDataReceiver : MonoBehaviour
     void Start()
     {
         mainThread = SynchronizationContext.Current;
+        if (mainThread == null)
+        {
+            Debug.LogWarning("[SensorDataReceiver] SynchronizationContext.Current is null, using fallback");
+        }
 
         var manager = SocketIOManager.Instance;
         Debug.Log($"[SensorDataReceiver] Start called. manager={(manager != null)}, connected={manager?.IsConnected}");
@@ -55,23 +59,43 @@ public class SensorDataReceiver : MonoBehaviour
 
     System.Threading.Tasks.Task OnSensorData(IEventContext response)
     {
-        mainThread.Post(_ =>
+        // バックグラウンドスレッドでデータを先に抽出
+        SensorDataPayload payload = null;
+        string rawText = null;
+        try
+        {
+            payload = response?.GetValue<SensorDataPayload>(0);
+            rawText = response?.RawText;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[SensorDataReceiver] データ抽出エラー: {e.Message}");
+            try { Debug.LogError($"[SensorDataReceiver] RawText: {response?.RawText}"); } catch { }
+            return System.Threading.Tasks.Task.CompletedTask;
+        }
+
+        void ProcessData()
         {
             try
             {
-                var payload = response.GetValue<SensorDataPayload>(0);
-                if (payload == null) return;
+                if (payload == null)
+                {
+                    Debug.LogWarning($"[SensorDataReceiver] payload is null, rawText: {rawText}");
+                    return;
+                }
 
                 onSensorDataReceived?.Invoke(payload);
 
                 switch (payload.role)
                 {
                     case "paddle_right":
-                        onPaddleRightInput?.Invoke(payload.accel);
+                        if (payload.accel != null)
+                            onPaddleRightInput?.Invoke(payload.accel);
                         break;
 
                     case "paddle_left":
-                        onPaddleLeftInput?.Invoke(payload.accel);
+                        if (payload.accel != null)
+                            onPaddleLeftInput?.Invoke(payload.accel);
                         break;
 
                     case "fisher":
@@ -81,9 +105,18 @@ public class SensorDataReceiver : MonoBehaviour
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"[SensorDataReceiver] パースエラー: {e.Message}");
+                Debug.LogError($"[SensorDataReceiver] 処理エラー: {e.Message}");
             }
-        }, null);
+        }
+
+        if (mainThread != null)
+        {
+            mainThread.Post(_ => ProcessData(), null);
+        }
+        else
+        {
+            ProcessData();
+        }
         return System.Threading.Tasks.Task.CompletedTask;
     }
 }
