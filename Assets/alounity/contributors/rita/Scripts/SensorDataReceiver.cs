@@ -25,11 +25,6 @@ public class SensorDataReceiver : MonoBehaviour
     public UnityEvent<AxisData> onPaddleLeftInput_B;
     public UnityEvent<SensorDataPayload> onFisherInput_B;
 
-    [Header("役割別イベント（後方互換・Team A扱い）")]
-    public UnityEvent<AxisData> onPaddleRightInput;
-    public UnityEvent<AxisData> onPaddleLeftInput;
-    public UnityEvent<SensorDataPayload> onFisherInput;
-
     SynchronizationContext mainThread;
 
     void Start()
@@ -121,8 +116,6 @@ public class SensorDataReceiver : MonoBehaviour
                                 onPaddleRightInput_B?.Invoke(payload.accel);
                             else
                                 onPaddleRightInput_A?.Invoke(payload.accel);
-                            // 後方互換
-                            onPaddleRightInput?.Invoke(payload.accel);
                         }
                         break;
 
@@ -133,8 +126,6 @@ public class SensorDataReceiver : MonoBehaviour
                                 onPaddleLeftInput_B?.Invoke(payload.accel);
                             else
                                 onPaddleLeftInput_A?.Invoke(payload.accel);
-                            // 後方互換
-                            onPaddleLeftInput?.Invoke(payload.accel);
                         }
                         break;
 
@@ -143,8 +134,6 @@ public class SensorDataReceiver : MonoBehaviour
                             onFisherInput_B?.Invoke(payload);
                         else
                             onFisherInput_A?.Invoke(payload);
-                        // 後方互換
-                        onFisherInput?.Invoke(payload);
                         break;
                 }
             }

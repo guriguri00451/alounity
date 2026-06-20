@@ -1152,75 +1152,75 @@ PrefabInstance:
       value: NetworkManager
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onFisherInput.m_PersistentCalls.m_Calls.Array.size
+      propertyPath: onFisherInput_A.m_PersistentCalls.m_Calls.Array.size
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onPaddleLeftInput.m_PersistentCalls.m_Calls.Array.size
+      propertyPath: onPaddleLeftInput_A.m_PersistentCalls.m_Calls.Array.size
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onPaddleRightInput.m_PersistentCalls.m_Calls.Array.size
+      propertyPath: onPaddleRightInput_A.m_PersistentCalls.m_Calls.Array.size
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onFisherInput.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      propertyPath: onFisherInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1161927821}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onFisherInput.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      propertyPath: onFisherInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onFisherInput.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      propertyPath: onFisherInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: OnFisher
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onPaddleLeftInput.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      propertyPath: onPaddleLeftInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 105504183}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onPaddleRightInput.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      propertyPath: onPaddleRightInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1899623244}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onPaddleLeftInput.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      propertyPath: onPaddleLeftInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onPaddleLeftInput.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      propertyPath: onPaddleLeftInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: OnPaddleInput
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onPaddleRightInput.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      propertyPath: onPaddleRightInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onPaddleRightInput.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      propertyPath: onPaddleRightInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: OnPaddleInput
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onFisherInput.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      propertyPath: onFisherInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
       value: Fisher_example, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onPaddleLeftInput.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      propertyPath: onPaddleLeftInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
       value: PaddleExample, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onPaddleRightInput.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      propertyPath: onPaddleRightInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
       value: PaddleExample, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onFisherInput.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      propertyPath: onFisherInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onPaddleLeftInput.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      propertyPath: onPaddleLeftInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 7831919474780269359, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
-      propertyPath: onPaddleRightInput.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      propertyPath: onPaddleRightInput_A.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     m_RemovedComponents: []
