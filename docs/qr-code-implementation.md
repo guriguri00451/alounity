@@ -153,36 +153,3 @@ http://{host}:{port}/room/{roomId}
 | UniQRCode | - | QRコードエンコード |
 | UniTask | 2.x | メインスレッド切り替え |
 | TextMeshPro | - | ルームIDテキスト表示 |
-
-## トラブルシューティング
-
-### QRコードが表示されない
-
-1. **コンソールログを確認**:
-   - `[QRCode] 生成URL: ...` が出力されているか
-   - `[SocketIO] host:create_ack パースエラー` が出ていないか
-
-2. **Inspectorの設定を確認**:
-   - `qrImage` にRawImageが設定されているか
-   - `rootPanel` が設定されているか
-   - QRPanelがアクティブか
-
-3. **スレッドの問題**:
-   - `EnsureRunningOnMainThread` エラーが出る場合
-   - `UniTask.SwitchToMainThread()` が正しく呼ばれているか確認
-
-### QRコードが読み取れない
-
-1. **解像度を確認**:
-   - `pixelsPerModule` を大きくする（例: 15〜20）
-   - RawImageのサイズを大きくする
-
-2. **コントラストを確認**:
-   - 背景が暗すぎないか
-   - RawImageのColorが白になっているか
-
-## 今後の拡張案
-
-- [ ] QRコードの中央にロゴ/アイコンを配置
-- [ ] ルームIDの手動入力も可能にする（QRが読み取れない場合のフォールバック）
-- [ ] QRコードの読み取り機能（Unity側でカメラを使ってプレイヤー接続確認）
