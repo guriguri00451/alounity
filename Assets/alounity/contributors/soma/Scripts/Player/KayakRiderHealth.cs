@@ -9,6 +9,20 @@ public class KayakRiderHealth : MonoBehaviour, IDamageable
 {
     [SerializeField] private int maxHp = 100;
     [SerializeField] private Transform respawnPoint;
+    private Rigidbody rb;
+    private int playerID;
+    public int PlayerID
+    {
+        get
+        {
+            return playerID;
+        }
+        
+        set 
+        {
+            playerID = value;
+        }
+    }
     private int currentHp;
 
     public bool IsDead => currentHp <= 0;
@@ -16,10 +30,16 @@ public class KayakRiderHealth : MonoBehaviour, IDamageable
     /// <summary>HPが0になったときに発火するイベント。GameManager等が購読してリスポーンを呼ぶ。</summary>
     public event Action onDead;
 
-    void Awake() => currentHp = maxHp;
-
-    public void TakeDamage(int damage)
+    void Awake()
     {
+        currentHp = maxHp;
+        rb = GetComponent<Rigidbody>();
+    }
+
+    public void TakeDamage(int damage, int _playerID)
+    {
+        if(playerID == _playerID) return;
+
         if (IsDead) return;
         currentHp = Mathf.Max(0, currentHp - damage);
         Debug.Log($"[KayakRider] ダメージ {damage} 受けた。残りHP: {currentHp}/{maxHp}");

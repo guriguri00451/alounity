@@ -25,6 +25,15 @@ namespace FishRumble
 
         public bool IsDepleted => currentDurability <= 0;
 
+        private int playerID;
+        public int PlayerID
+        {
+            set 
+            {
+                playerID = value;
+            }
+        }
+
         /// <summary>
         /// 耐久値を最大値にリセットする。魚がかかった瞬間に呼ぶ。
         /// </summary>
@@ -34,29 +43,37 @@ namespace FishRumble
         /// 耐久値を減らす。Swinging 中の一振りごとに呼ぶ。
         /// </summary>
         public void TakeDamage(int damage = 1)
-            => currentDurability = Mathf.Max(0, currentDurability - damage);
+        {
+            currentDurability = Mathf.Max(0, currentDurability - damage);
+            Debug.Log("fish taken damage");
+        }
 
         /// <summary>
         /// 振り回し攻撃判定のON/OFFを切り替える。FisherController が状態遷移時に呼ぶ。
         /// </summary>
         public void SetAttackActive(bool value) => isAttackActive = value;
 
-        private void OnCollisionEnter(Collision collision)
+        /// <summary>
+        /// OnTriggerEnter is called when the Collider other enters the trigger.
+        /// </summary>
+        /// <param name="other">The other Collider involved in this other.</param>
+        void OnTriggerEnter(Collider other)
         {
             if (!isAttackActive) return;
 
-            bool hitPlayer = collision.gameObject.CompareTag("KayakRider");
-            bool hitObstacle = collision.gameObject.CompareTag("Obstacle");
+            bool hitPlayer = other.gameObject.CompareTag("KayakRider");
+            bool hitObstacle = other.gameObject.CompareTag("Obstacle");
 
             if (!hitPlayer && !hitObstacle) return;
 
-            if (hitPlayer && collision.gameObject.TryGetComponent<IDamageable>(out var target))
+            if (hitPlayer && other.gameObject.TryGetComponent<IDamageable>(out var target))
             {
-                target.TakeDamage(swingAttackDamage);
+                target.TakeDamage(swingAttackDamage,playerID);
                 onAttackHit?.Invoke(target);
             }
 
             TakeDamage(1);
+
             if (IsDepleted)
             {
                 isAttackActive = false;

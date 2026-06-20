@@ -4,6 +4,19 @@ using UnityEngine.InputSystem;
 
 public class BoatController : MonoBehaviour
 {
+    int playerID;
+    public int PlayerID
+    {
+        get
+        {
+            return playerID;
+        }
+        
+        set 
+        {
+            playerID = value;
+        }
+    }
     [SerializeField] Transform center;
     [SerializeField] WheelCollider[] wheels;
     [SerializeField] InputActionProperty[] boat;

@@ -23,14 +23,12 @@ public class FisherController : MonoBehaviour
     [SerializeField] private float horizontalInput;
 
     [Header("Settings")]
-    [SerializeField] private GameObject fishPrefab;
+    [SerializeField] private FishConfig fishSettings;
     [SerializeField] private FishRumbleInput input;
     [SerializeField] private bool isDebugMode = false;
 
     [Header("FishRodParams")]
-    [SerializeField] private float rodRotationSpeed = 5f;
-    [SerializeField] private float rodMinRotation = -45f;
-    [SerializeField] private float rodMaxRotation = 45f;
+    [SerializeField] private float addUpVector = 0.1f;
     [SerializeField] private FisherState currentState = FisherState.Idle;
     [SerializeField] private float castPower = 10f;
     [SerializeField] private int CatchRequiredShakeCount = 12;
@@ -41,8 +39,19 @@ public class FisherController : MonoBehaviour
     [SerializeField] private float bigAttackPowerThresholdValue;
     [SerializeField] private int swingFinishTimeMs = 1200;
     [SerializeField] private float swingCoolTime = 3f;
-
-
+    private int playerID;
+    public int PlayerID
+    {
+        get
+        {
+            return playerID;
+        }
+        
+        set 
+        {
+            playerID = value;
+        }
+    }
     private int shakeCount = 0;
     private Fish caughtFish;
     private Hook _hook;
@@ -56,6 +65,7 @@ public class FisherController : MonoBehaviour
         SubscribeInput();
         GetHookReferences();
         initialRodRotation = rodTransform.localRotation;
+        ManageState(FisherState.Idle);
     }
 
     void GetHookReferences()
@@ -63,6 +73,7 @@ public class FisherController : MonoBehaviour
         hookRigidbody = hookTransform.GetComponent<Rigidbody>();
         _hook = hookTransform.GetComponent<Hook>();
         _hook.onAbleCatch += AbleCatch;
+        _hook.onUnableCatch += UnableCatch;
     }
 
     void Update()
@@ -73,7 +84,6 @@ public class FisherController : MonoBehaviour
             if (Keyboard.current.digit2Key.wasPressedThisFrame) ManageState(FisherState.Waiting);
             if (Keyboard.current.digit4Key.wasPressedThisFrame) ManageState(FisherState.Swinging);
         }
-        RotateRod();
     }
 
     void SubscribeInput()
@@ -85,27 +95,6 @@ public class FisherController : MonoBehaviour
         input.Player.Shake.performed += Shake;
 
         input.Enable();
-    }
-
-    /// <summary>
-    /// 竿の回転を管理する。horizontalInput の値に応じて rodMinRotation〜rodMaxRotation の範囲で回転させる。
-    /// </summary>
-    void RotateRod()
-    {
-        if (!isDebugMode)
-        {
-            horizontalInput = input.Player.Rotate.ReadValue<float>();
-        }
-
-        float targetAngle = Mathf.Lerp(rodMinRotation, rodMaxRotation, (horizontalInput + 1f) / 2f) + initialRodRotation.eulerAngles.y;
-        float currentAngle = rodTransform.localEulerAngles.y;
-
-        float smoothedAngle = Mathf.LerpAngle(currentAngle, targetAngle, Time.deltaTime * rodRotationSpeed);
-        rodTransform.localEulerAngles = new Vector3(
-            rodTransform.localEulerAngles.x,
-            smoothedAngle,
-            rodTransform.localEulerAngles.z
-        );
     }
 
     /// <summary>
@@ -145,23 +134,26 @@ public class FisherController : MonoBehaviour
         if (currentState != FisherState.Idle) return;
         ManageState(FisherState.Waiting);
         hookRigidbody.isKinematic = true;
-        hookTransform.position = Vector3.zero;
         hookRigidbody.isKinematic = false;
-        hookRigidbody.AddForce(this.transform.forward * castPower, ForceMode.Impulse);
+        Vector3 castVector = this.transform.forward;
+        castVector.y += addUpVector;
+        hookRigidbody.AddForce(castVector.normalized * castPower, ForceMode.Impulse);
     }
 
     void Reel(InputAction.CallbackContext context)
     {
-        Debug.Log("引きつける");
-        if (currentState != FisherState.Waiting) return;
+        if (currentState == FisherState.Waiting || currentState == FisherState.Swinging) 
+        {
+            Debug.Log("引きつける");
 
-        if(isAbleCatch)
-        {
-            ManageState(FisherState.Swinging);
-        }
-        else
-        {
-            ManageState(FisherState.Idle);
+            if(isAbleCatch)
+            {
+                ManageState(FisherState.Swinging);
+            }
+            else
+            {
+                ManageState(FisherState.Idle);
+            }
         }
     }
 
@@ -211,7 +203,7 @@ public class FisherController : MonoBehaviour
         hookRigidbody.isKinematic = true;
         hookRigidbody.isKinematic = false;
 
-        Vector3 attackForce = Quaternion.Euler(0f, 45f, 0f) * meToFishVector.normalized * fishAcceraratePower;
+        Vector3 attackForce = Quaternion.Euler(0f, 90f, 0f) * meToFishVector.normalized * fishAcceraratePower;
         hookRigidbody.AddForce(attackForce, ForceMode.Impulse);
 
         //待機
@@ -244,7 +236,8 @@ public class FisherController : MonoBehaviour
         if (currentState != FisherState.Waiting && caughtFish != null) return;
 
         hookRigidbody.isKinematic = true;
-        Fish fish = Instantiate(fishPrefab,hookTransform).GetComponent<Fish>();
+        Fish fish = Instantiate(fishSettings.GetFish(),hookTransform).GetComponent<Fish>();
+        fish.PlayerID = playerID;
         _hook.CatchFish(fish.transform);
         caughtFish = fish.GetComponent<Fish>();
         caughtFish.onDepleted += DropFish;
@@ -253,7 +246,7 @@ public class FisherController : MonoBehaviour
 
     void AbleCatch()
     {
-        isAbleCatch = true;
+        if(caughtFish == null) isAbleCatch = true;
     }
     void UnableCatch()
     {
@@ -262,10 +255,37 @@ public class FisherController : MonoBehaviour
 
     void DropFish()
     {
-        caughtFish.onDepleted -= DropFish;
         if(caughtFish != null) 
+        {
+            caughtFish.onDepleted -= DropFish;
             caughtFish.SetAttackActive(false);
-        caughtFish = null;
+            caughtFish = null;
+        }
         _hook.ReleaseFish();
+
+        ManageState(FisherState.Idle);
+    }
+
+    /// <summary>
+    /// 全イベント購読を解除してリソースを解放する。
+    /// </summary>
+    void OnDestroy()
+    {
+        input.Player.Cast.performed -= Cast;
+        input.Player.Reel.performed -= Reel;
+        input.Player.Shake.performed -= Shake;
+        input.Disable();
+        input.Dispose();
+
+        if (_hook != null)
+        {
+            _hook.onAbleCatch -= AbleCatch;
+            _hook.onUnableCatch -= UnableCatch;
+        }
+
+        if (caughtFish != null)
+        {
+            caughtFish.onDepleted -= DropFish;
+        }
     }
 }
