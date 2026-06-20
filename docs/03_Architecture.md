@@ -46,10 +46,10 @@ graph TB
         SD -. "InputSystem" .-> ゲームロジック
     end
 
-    SIOC -- "controller:connect<br/>controller:sensor<br/>room:exists" --> SIOS
-    SIOS -- "sensor:data<br/>room:closed<br/>server:ack<br/>room:exists_ack<br/>room:players_update" --> SIOC
-    SIOU -- "host:create<br/>host:close" --> SIOS
-    SIOS -- "host:create_ack" --> SIOU
+    SIOC -- "スマホ接続<br/>センサーデータ送信" --> SIOS
+    SIOS -- "センサーデータ転送<br/>接続応答・ルーム通知" --> SIOC
+    SIOU -- "ルーム作成・閉鎖" --> SIOS
+    SIOS -- "ルーム作成応答" --> SIOU
 ```
 
 ### 通信フロー
@@ -60,30 +60,46 @@ sequenceDiagram
     participant S as Next.js Server
     participant P as スマホブラウザ
 
-    Note over U,S: ルーム作成フェーズ
-    U->>S: host:create { gameMode }
-    S-->>U: host:create_ack { ok, roomId, gameMode }
+    Note over U,S: ルーム作成
+    U->>S: ルーム作成要求
+    S-->>U: ルーム作成完了（ルームID払い出し）
 
     Note over P,S: ルーム存在確認
-    P->>S: room:exists { roomId }
-    S-->>P: room:exists_ack { exists, gameMode, takenRoles }
+    P->>S: ルーム存在確認
+    S-->>P: ルーム情報（ゲームモード・占有役割）
 
-    Note over P,S: ルーム参加フェーズ
-    P->>S: controller:connect { roomId, role, team }
-    S-->>P: server:ack { received, playerId, error? }
-    S-->>P: room:players_update { players }
+    Note over P,S: ルーム参加
+    P->>S: ルーム参加（チーム・役割指定）
+    S-->>P: 参加結果
+    S-->>P: プレイヤー一覧更新
 
     Note over P,U: センサーデータ送受信
     loop 30fps スロットリング
-        P->>S: controller:sensor { roomId, role, team, accel, rotation, orientation, timestamp }
-        S->>U: sensor:data { playerId, role, team, accel, rotation, orientation, timestamp }
+        P->>S: センサーデータ（加速度・方位・角速度）
+        S->>U: センサーデータ転送（プレイヤーID付き）
     end
 
-    Note over U,S: ルーム閉鎖（明示的）
-    U->>S: host:close { roomId }
-    S->>P: room:closed { roomId, reason }
-    S->>U: room:closed { roomId, reason }
+    Note over U,S: ルーム閉鎖
+    U->>S: ルーム閉鎖
+    S->>P: ルーム閉鎖通知
+    S->>U: ルーム閉鎖通知
 ```
+
+### 通信メッセージ対応表
+
+| 図中のメッセージ | 通信方向 | 対応するSocket.IOイベント |
+|---|---|---|
+| ルーム作成要求 | Unity → サーバー | `host:create` |
+| ルーム作成完了 | サーバー → Unity | `host:create_ack` |
+| ルーム存在確認 | スマホ → サーバー | `room:exists` |
+| ルーム情報 | サーバー → スマホ | `room:exists_ack` |
+| ルーム参加 | スマホ → サーバー | `controller:connect` |
+| 参加結果 | サーバー → スマホ | `server:ack` |
+| プレイヤー一覧更新 | サーバー → 全クライアント | `room:players_update` |
+| センサーデータ | スマホ → サーバー | `controller:sensor` |
+| センサーデータ転送 | サーバー → Unity | `sensor:data` |
+| ルーム閉鎖 | Unity → サーバー | `host:close` |
+| ルーム閉鎖通知 | サーバー → 全クライアント | `room:closed` |
 
 ## Socket.IO イベント設計
 
