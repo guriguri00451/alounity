@@ -37,6 +37,13 @@ export default function RoomPage() {
     autoConnect: role !== null && team !== null,
   });
 
+  // singleモードではチームAに自動設定
+  useEffect(() => {
+    if (gameMode === "single" && team === null) {
+      setTeam("A");
+    }
+  }, [gameMode, team]);
+
   // takenRoles（チーム別）からplayersを構築
   const setTakenRolesFromData = useCallback((takenRoles: Record<string, string[]>) => {
     const playerList: PlayerInfo[] = [];
