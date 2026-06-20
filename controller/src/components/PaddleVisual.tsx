@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { SensorData } from "@/hooks/useDeviceMotion";
 import type { Team } from "@/lib/types";
 
@@ -10,25 +10,65 @@ interface PaddleVisualProps {
   team: Team;
 }
 
+const SWING_THRESHOLD = 30;
+const POWER_HOLD_DURATION = 800;
+
 export function PaddleVisual({ sensorData, side, team }: PaddleVisualProps) {
   const uid = useId();
+  const [isStroking, setIsStroking] = useState(false);
+  const [displayedPower, setDisplayedPower] = useState(0);
+  const powerHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const magnitude = useMemo(() => {
     if (!sensorData?.acceleration) return 0;
     const { x, y, z } = sensorData.acceleration;
     return Math.sqrt((x ?? 0) ** 2 + (y ?? 0) ** 2 + (z ?? 0) ** 2);
   }, [sensorData]);
 
-  const normalizedForce = Math.min(magnitude / 15, 1);
-  const rotation = side === "right" ? normalizedForce * 25 : -normalizedForce * 25;
+  const normalizedForce = Math.min(Math.max((magnitude - SWING_THRESHOLD) / 15, 0), 1);
+
+  useEffect(() => {
+    if (magnitude > SWING_THRESHOLD) {
+      setIsStroking(true);
+    } else if (isStroking) {
+      const timer = setTimeout(() => setIsStroking(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [magnitude, isStroking]);
+
+  useEffect(() => {
+    setDisplayedPower((prev) => Math.max(prev, normalizedForce));
+
+    if (normalizedForce > 0) {
+      if (powerHoldTimerRef.current) {
+        clearTimeout(powerHoldTimerRef.current);
+      }
+      powerHoldTimerRef.current = setTimeout(() => {
+        setDisplayedPower(0);
+      }, POWER_HOLD_DURATION);
+    }
+  }, [normalizedForce]);
+
+  useEffect(() => {
+    return () => {
+      if (powerHoldTimerRef.current) {
+        clearTimeout(powerHoldTimerRef.current);
+      }
+    };
+  }, []);
+
+  const rotation = isStroking ? (side === "right" ? 25 : -25) : 0;
   const teamColor = team === "A" ? "#3B82F6" : "#EF4444";
   const teamColorLight = team === "A" ? "#93C5FD" : "#FCA5A5";
 
   return (
     <div className="relative flex flex-col items-center">
       <div
-        className="transition-transform duration-100 ease-out"
+        className="transition-transform"
         style={{
-          transform: `rotate(${rotation}deg) scale(${1 + normalizedForce * 0.1})`,
+          transform: `rotate(${rotation}deg) scale(${1 + (isStroking ? normalizedForce * 0.1 : 0)})`,
+          transitionDuration: isStroking ? "150ms" : "300ms",
+          transitionTimingFunction: isStroking ? "ease-out" : "ease-in-out",
         }}
       >
         <svg
@@ -78,7 +118,7 @@ export function PaddleVisual({ sensorData, side, team }: PaddleVisualProps) {
         </svg>
       </div>
 
-      {normalizedForce > 0.1 && (
+      {isStroking && normalizedForce > 0.1 && (
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-1">
           {Array.from({ length: Math.ceil(normalizedForce * 5) }).map((_, i) => (
             <div
@@ -93,10 +133,14 @@ export function PaddleVisual({ sensorData, side, team }: PaddleVisualProps) {
 
       <div className="mt-4 text-center">
         <div
-          className="text-4xl font-black"
-          style={{ color: "white", textShadow: "2px 2px 4px rgba(0,0,0,0.3)" }}
+          className="text-4xl font-black transition-all"
+          style={{
+            color: displayedPower > 0.3 ? "#FFD700" : "white",
+            textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
+            transform: `scale(${1 + displayedPower * 0.3})`,
+          }}
         >
-          {Math.round(normalizedForce * 100)}
+          {Math.round(displayedPower * 100)}
         </div>
         <div className="text-white/80 text-sm font-bold">POWER</div>
       </div>
