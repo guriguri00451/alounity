@@ -1099,13 +1099,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1435202970288000903, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1498443608890838014, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
       propertyPath: gameMode
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1498443608890838014, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
       propertyPath: serverUrl
-      value: https://alounity.onrender.com/
+      value: https://alounity.onrender.com
       objectReference: {fileID: 0}
     - target: {fileID: 4348190351036767520, guid: 8f9d11f42e40d4017a03fb97f1550293, type: 3}
       propertyPath: m_LocalPosition.x
