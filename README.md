@@ -43,7 +43,6 @@
 | レンダリング | Universal Render Pipeline | 17.3.0 |
 | 入力管理 | Input System | 1.19.0 |
 | 非同期処理 | UniTask | - |
-| Reactive Extensions | R3 | - |
 | コントローラーアプリ | Next.js (App Router) | 16.2.9 |
 | リアルタイム通信 | Socket.IO | 4.8.3 |
 | Socket.IO クライアント (Unity) | SocketIOClient (doghappy) | 4.0.4 |
