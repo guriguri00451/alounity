@@ -37,7 +37,7 @@ public class PlayerManager: MonoBehaviour
         }
     }
 
-    public async UniTask LivePlayer()
+    public async UniTask DeadPlayer()
     {
         await UniTask.WaitUntil(() => currentState == PlayerState.Respawning);
     }
