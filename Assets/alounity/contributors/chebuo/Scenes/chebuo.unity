@@ -805,7 +805,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 191311806599972426, guid: 2fafe4ee5b78b8d4da6993d95ff094c3, type: 3}
       propertyPath: m_Radius
-      value: 0.25
+      value: 0.4
       objectReference: {fileID: 0}
     - target: {fileID: 1239918871407286175, guid: 2fafe4ee5b78b8d4da6993d95ff094c3, type: 3}
       propertyPath: m_LocalScale.x
@@ -825,7 +825,7 @@ PrefabInstance:
       objectReference: {fileID: 8675452379081041382, guid: 4c5f2e0a7160e65499b085f7664d90c3, type: 3}
     - target: {fileID: 2487609931882433172, guid: 2fafe4ee5b78b8d4da6993d95ff094c3, type: 3}
       propertyPath: m_Radius
-      value: 0.25
+      value: 0.4
       objectReference: {fileID: 0}
     - target: {fileID: 4811459793899241359, guid: 2fafe4ee5b78b8d4da6993d95ff094c3, type: 3}
       propertyPath: m_Mass
