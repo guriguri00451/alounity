@@ -25,6 +25,20 @@ namespace FishRumble
 
         public bool IsDepleted => currentDurability <= 0;
 
+        private int playerID;
+        public int PlayerID
+        {
+            get
+            {
+                return playerID;
+            }
+            
+            set 
+            {
+                playerID = value;
+            }
+        }
+
         /// <summary>
         /// 耐久値を最大値にリセットする。魚がかかった瞬間に呼ぶ。
         /// </summary>
@@ -52,7 +66,7 @@ namespace FishRumble
 
             if (hitPlayer && collision.gameObject.TryGetComponent<IDamageable>(out var target))
             {
-                target.TakeDamage(swingAttackDamage);
+                target.TakeDamage(swingAttackDamage,playerID);
                 onAttackHit?.Invoke(target);
             }
 

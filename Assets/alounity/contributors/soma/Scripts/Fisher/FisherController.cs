@@ -41,8 +41,19 @@ public class FisherController : MonoBehaviour
     [SerializeField] private float bigAttackPowerThresholdValue;
     [SerializeField] private int swingFinishTimeMs = 1200;
     [SerializeField] private float swingCoolTime = 3f;
-
-
+    private int playerID;
+    public int PlayerID
+    {
+        get
+        {
+            return playerID;
+        }
+        
+        set 
+        {
+            playerID = value;
+        }
+    }
     private int shakeCount = 0;
     private Fish caughtFish;
     private Hook _hook;
@@ -245,6 +256,7 @@ public class FisherController : MonoBehaviour
 
         hookRigidbody.isKinematic = true;
         Fish fish = Instantiate(fishPrefab,hookTransform).GetComponent<Fish>();
+        fish.PlayerID = playerID;
         _hook.CatchFish(fish.transform);
         caughtFish = fish.GetComponent<Fish>();
         caughtFish.onDepleted += DropFish;
