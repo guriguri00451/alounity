@@ -22,7 +22,7 @@ graph TB
 
     subgraph サーバー["Next.js Custom Server（通信中継）"]
         HTTP["HTTP/HTTPS Server<br/>Node.js + tsx"]
-        SIOS["Socket.IO Server<br/>ポート 3000"]
+        SIOS["Socket.IO Server"]
         ROOM["ルーム管理<br/>room:{roomId}"]
         HTTP --> SIOS
         SIOS --> ROOM
