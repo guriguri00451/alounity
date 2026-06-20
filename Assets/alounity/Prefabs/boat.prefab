@@ -1169,9 +1169,9 @@ MonoBehaviour:
   isDebugMode: 1
   addUpVector: 1
   currentState: 0
-  castPower: 100
+  castPower: 200
   CatchRequiredShakeCount: 12
-  fishAcceraratePower: 100
+  fishAcceraratePower: 500
   smallAttackPowerThresholdValue: 0.3
   middleAttackPowerThresholdValue: 0.6
   bigAttackPowerThresholdValue: 0.7
