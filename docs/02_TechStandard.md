@@ -2,6 +2,8 @@
 
 ## 1. 使用技術
 
+### Unity（ゲームクライアント）
+
 | カテゴリ | ライブラリ / ツール | バージョン |
 |---------|-----------------|-----------|
 | ゲームエンジン | Unity 6 | 6000.3.17f1 |
@@ -9,9 +11,35 @@
 | 入力管理 | Input System | 1.19.0 |
 | 非同期処理 | UniTask | - |
 | Reactive Extensions | R3 | - |
-| スマホ通信 | 未選定（[Issue #7](https://github.com/guriguri00451/alounity/issues/7) で決定予定） | - |
 
-> スマホ通信の候補: WebSocket / UDP。Issue #7 で方式が確定し次第更新します。
+### コントローラーアプリ（スマホブラウザ）
+
+| カテゴリ | ライブラリ / ツール | バージョン |
+|---------|-----------------|-----------|
+| フレームワーク | Next.js (App Router) | 16.2.9 |
+| UIライブラリ | React | 19.2.4 |
+| スタイリング | Tailwind CSS | 4.x |
+| 型チェック | TypeScript | 5.x |
+| リアルタイム通信 | Socket.IO Client | 4.8.3 |
+| センサーAPI | DeviceMotionEvent / DeviceOrientationEvent | - |
+
+### サーバー（リアルタイム通信中継）
+
+| カテゴリ | ライブラリ / ツール | バージョン |
+|---------|-----------------|-----------|
+| ランタイム | Node.js (tsx) | - |
+| Webフレームワーク | Next.js (Custom Server) | 16.2.9 |
+| リアルタイム通信 | Socket.IO | 4.8.3 |
+| HTTPS（開発用） | mkcert | - |
+
+### 開発ツール・CI
+
+| カテゴリ | ライブラリ / ツール | バージョン |
+|---------|-----------------|-----------|
+| Linter / Formatter | Biome | 2.5.0 |
+| テスト | Vitest | 4.1.8 |
+| テストユーティリティ | Testing Library (React) | 16.3.2 |
+| CI | GitHub Actions | - |
 
 ## 2. 命名規則
 * **PascalCase (単語ごとに頭文字を大文字):** アセット名、クラス名、メソッド名、プロパティ名。
@@ -52,8 +80,10 @@ Assets/alounity/
 | SomaScene | `Assets/alounity/contributors/soma/Scenes/` | 釣り機能テスト用 |
 
 ## 5. スマホ通信方針
+* **通信方式:** Socket.IO (WebSocket + polling フォールバック)
 * **通信方向:** スマホ → Unity（PC）の **一方向** 送信のみ
 * **送信データ:** 加速度センサー（DeviceMotionEvent）・方位磁針（DeviceOrientationEvent）
-* **通信方式:** [Issue #7](https://github.com/guriguri00451/alounity/issues/7) で選定予定
-    * 候補: WebSocket、UDP（低遅延）
-    * スマホ側はブラウザベース（追加アプリ不要）を優先
+* **スロットリング:** 30fps（33ms間隔）でネットワーク負荷を抑制
+* **スマホ側:** ブラウザベース（追加アプリ不要）
+* **HTTPS:** センサーAPIはSecure Contextを要求 → mkcertでローカル証明書を生成
+* **詳細設計:** `docs/03_Architecture.md` のイベント設計を参照
