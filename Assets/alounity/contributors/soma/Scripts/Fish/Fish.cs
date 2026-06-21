@@ -32,6 +32,10 @@ namespace FishRumble
             {
                 playerID = value;
             }
+            get
+            {
+                return playerID;
+            }
         }
 
         /// <summary>
@@ -45,7 +49,6 @@ namespace FishRumble
         public void TakeDamage(int damage = 1)
         {
             currentDurability = Mathf.Max(0, currentDurability - damage);
-            Debug.Log("fish taken damage");
         }
 
         /// <summary>
@@ -59,8 +62,6 @@ namespace FishRumble
 
             bool hitPlayer = other.gameObject.CompareTag("KayakRider");
             bool hitObstacle = other.gameObject.CompareTag("Obstacle");
-
-            Debug.Log(other.gameObject.CompareTag("KayakRider"));
 
             if (!hitPlayer && !hitObstacle) return;
 

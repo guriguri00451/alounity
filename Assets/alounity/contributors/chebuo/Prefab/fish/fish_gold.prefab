@@ -9,6 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8673036013691186621}
+  - component: {fileID: 4609292478719621471}
+  - component: {fileID: 6245465261084970692}
+  - component: {fileID: 99403746040617965}
   m_Layer: 0
   m_Name: fish_gold
   m_TagString: Untagged
@@ -32,6 +35,68 @@ Transform:
   - {fileID: 3031442552960123125}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4609292478719621471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1798119890976552468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e03576f1ab494183bc6ad9bc1f32848, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FishRumble.Fish
+  swingAttackDamage: 10
+  maxDurability: 10
+--- !u!54 &6245465261084970692
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1798119890976552468}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!65 &99403746040617965
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1798119890976552468}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 2, z: 5}
+  m_Center: {x: 0.003032796, y: 0.019654192, z: -0.091546685}
 --- !u!1001 &617804508771334919
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -224,84 +289,8 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 86106cf56a1153848ad7905086c0b1fb, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1087716685832412396}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 86106cf56a1153848ad7905086c0b1fb, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 8852725599308875521}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 86106cf56a1153848ad7905086c0b1fb, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1586682990381502455}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 86106cf56a1153848ad7905086c0b1fb, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1817095574469254647}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 86106cf56a1153848ad7905086c0b1fb, type: 3}
---- !u!1 &2403242543803357775 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 86106cf56a1153848ad7905086c0b1fb, type: 3}
-  m_PrefabInstance: {fileID: 3286327614277183262}
-  m_PrefabAsset: {fileID: 0}
---- !u!65 &8852725599308875521
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2403242543803357775}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.40887296, y: 0.41945857, z: 0.9318891}
-  m_Center: {x: 0.003032796, y: 0.019654192, z: -0.091546685}
---- !u!54 &1586682990381502455
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2403242543803357775}
-  serializedVersion: 5
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
---- !u!114 &1817095574469254647
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2403242543803357775}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3e03576f1ab494183bc6ad9bc1f32848, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FishRumble.Fish
-  swingAttackDamage: 10
-  maxDurability: 10
 --- !u!4 &3031442552960123125 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 86106cf56a1153848ad7905086c0b1fb, type: 3}

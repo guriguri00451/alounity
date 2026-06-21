@@ -43,6 +43,9 @@ public class PlayerManager: MonoBehaviour
 
     void DeadPlayer()
     {
+        fisherController.DropFish();
+        boatController.FixBoat();
+
         riderHealth.onDead -= DeadPlayer;
         onDeath?.Invoke(playerID);
     }

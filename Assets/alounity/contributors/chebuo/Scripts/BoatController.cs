@@ -26,6 +26,7 @@ public class BoatController : MonoBehaviour
     [SerializeField] float breakValueThreshold = 0.2f;
     [SerializeField] float power = 30;
     [SerializeField] float breakPower = 30;
+    Rigidbody rb;
 
     // [0]=右パドル, [1]=左パドル。センサーから更新されなければ0のままInputActionにフォールバック
     float[] sensorInputValues = new float[2];
@@ -38,7 +39,14 @@ public class BoatController : MonoBehaviour
 
     void Start()
     {
+        rb = GetComponent<Rigidbody>();
         for(int i=0;i<boat.Length;i++) boat[i].action.Enable();
+    }
+
+    public void FixBoat()
+    {
+        rb.isKinematic = true;
+        rb.isKinematic = false;
     }
 
     void FixedUpdate()

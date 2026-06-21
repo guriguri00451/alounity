@@ -224,8 +224,8 @@ public class FisherController : MonoBehaviour
         hookRigidbody.isKinematic = true;
         hookRigidbody.isKinematic = false;
 
-        Vector3 attackForce = Quaternion.Euler(0f, 90f, 0f) * meToFishVector.normalized * fishAcceraratePower;
-        hookRigidbody.AddForce(attackForce, ForceMode.Impulse);
+        Vector3 swingVector = this.transform.forward;
+        hookRigidbody.AddForce(swingVector.normalized * fishAcceraratePower, ForceMode.Impulse);
 
         //待機
         await UniTask.Delay(swingFinishTimeMs);
@@ -274,10 +274,11 @@ public class FisherController : MonoBehaviour
         isAbleCatch = false;
     }
 
-    void DropFish()
+    public void DropFish()
     {
         if(caughtFish != null) 
         {
+            
             caughtFish.onDepleted -= DropFish;
             caughtFish.SetAttackActive(false);
             caughtFish = null;

@@ -4,17 +4,19 @@ using JetBrains.Annotations;
 using Cysharp.Threading.Tasks;
 using System.Threading.Tasks;
 using Unity.VisualScripting;
+using UnityEngine.SceneManagement;
 
 namespace FishRumble
 {
     public class BattleManager : MonoBehaviour
     {
         [Header("準備パラメータ")]
+        [SerializeField] GameObject QRPanel;
         [SerializeField] GameObject[] playerLocations;
         [SerializeField] GameObject playerPrefab;
         [SerializeField] int DeadCoolTimeMs;
         [SerializeField] SensorDataReceiver sensorDataReceiver;
-        int[] playersLives;
+        [SerializeField] int[] playersLives;
         int winningTeamID;
         [SerializeField] PlayerManager[] players;
         PlayerData[] playersData;
@@ -30,15 +32,21 @@ namespace FishRumble
 
         async void ManageBattle()
         {
-            //バトル準備
-            PlayersSubscribe();
+            await EnterSettingsScreen();
 
             //バトル開始
+            PlayersSubscribe();
+        }
 
+        async UniTask EnterSettingsScreen()
+        {
+            await UniTask.WaitUntil(() => Input.GetKey(KeyCode.Space));
+            QRPanel.SetActive(false);
         }
 
         void PlayersSubscribe()
         {
+            playersLives = new int[] {3,3};
             for(int i = 0; i < players.Length; i++)
             {
                 players[i].PlayerID = i;
@@ -50,7 +58,6 @@ namespace FishRumble
 
         async void DeathPlayer(int playerID)
         {
-            players[playerID].onDeath -= DeathPlayer;
             playersLives[playerID] -= 1;
             if(playersLives[playerID] <= 0)
             {
@@ -91,7 +98,8 @@ namespace FishRumble
                 }
             }
 
-            // もし負けた時にゲーム終了処理に行く
+            Debug.Log("finishgamecheck:"+livingCount);
+            // もし残機がなかったら時にゲーム終了処理に行く
             if(livingCount <= 1)
             {
                 FinishGame(winnerID);
@@ -106,6 +114,8 @@ namespace FishRumble
             AppManager.Instance.resultPlayersData = null;
             AppManager.Instance.winnerPlayerID = winnerID;
             AppManager.Instance.resultPlayersData = playersData;
+
+            SceneManager.LoadScene(SceneName.Result.ToString());
         }
 
         
