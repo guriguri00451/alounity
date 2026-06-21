@@ -3,6 +3,7 @@ using FishRumble;
 using JetBrains.Annotations;
 using Cysharp.Threading.Tasks;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 
 namespace FishRumble
 {
@@ -12,12 +13,17 @@ namespace FishRumble
         [SerializeField] GameObject[] playerLocations;
         [SerializeField] GameObject playerPrefab;
         [SerializeField] int DeadCoolTimeMs;
+        [SerializeField] SensorDataReceiver sensorDataReceiver;
         int[] playersLives;
         int winningTeamID;
-        PlayerManager[] players;
+        [SerializeField] PlayerManager[] players;
         PlayerData[] playersData;
 
-        public void Start()
+        void Awake()
+        {
+            AppManager.Instance.battleManager = this;
+        }
+        void Start()
         {
             ManageBattle();
         }
@@ -25,33 +31,45 @@ namespace FishRumble
         async void ManageBattle()
         {
             //バトル準備
-            PlayersSpawn();
+            PlayersSubscribe();
 
             //バトル開始
 
         }
 
-        void PlayersSpawn()
+        void PlayersSubscribe()
         {
-            for(int i = 0; i < AppManager.Instance.playerCount; i++)
+            for(int i = 0; i < players.Length; i++)
             {
-                GameObject obj = Instantiate(playerPrefab, playerLocations[i].transform.position, playerLocations[i].transform.rotation);
-                players[i] = obj.GetComponent<PlayerManager>();
                 players[i].PlayerID = i;
                 players[i].onDeath += DeathPlayer;
+                players[i].BindSensorInput(sensorDataReceiver);
+                players[i].Init();
             }
         }
 
-        async void DeathPlayer(int i)
+        async void DeathPlayer(int playerID)
         {
-            players[i].onDeath -= DeathPlayer;
-            playersLives[i] -= 1;
-            if(playersLives[i] <= 0)
+            players[playerID].onDeath -= DeathPlayer;
+            playersLives[playerID] -= 1;
+            if(playersLives[playerID] <= 0)
             {
-
+                CheckGameMatch(playerID);
                 return;
             }
             await DeadCoolTime();
+            RespawnPlayer(playerID);
+        }
+        void RespawnPlayer(int playerID)
+        {
+            players[playerID].Init();
+            players[playerID].transform.position = GetRespawnPoint();
+        }
+
+        Vector3 GetRespawnPoint()
+        {
+            int i = Random.Range(0, playerLocations.Length - 1); 
+            return playerLocations[i].transform.position;
         }
 
         async UniTask DeadCoolTime()
@@ -59,7 +77,7 @@ namespace FishRumble
             await UniTask.Delay(DeadCoolTimeMs);
         }
 
-        void DefetePlayer(int playerID)
+        void CheckGameMatch(int playerID)
         {
             int winnerID = 0;
             int livingCount = 0;
@@ -73,11 +91,14 @@ namespace FishRumble
                 }
             }
 
+            // もし負けた時にゲーム終了処理に行く
             if(livingCount <= 1)
             {
                 FinishGame(winnerID);
             }
-            //UI真っ黒にする処理
+
+            //　リスポーン前にUI真っ黒にする処理
+
         }
         void FinishGame(int winnerID)
         {

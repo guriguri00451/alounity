@@ -26,17 +26,28 @@ public class BoatController : MonoBehaviour
     [SerializeField] float breakValueThreshold = 0.2f;
     [SerializeField] float power = 30;
     [SerializeField] float breakPower = 30;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+
+    // [0]=右パドル, [1]=左パドル。センサーから更新されなければ0のままInputActionにフォールバック
+    float[] sensorInputValues = new float[2];
+
+    public void OnPaddleRightInput(AxisData data)
+        => sensorInputValues[0] = Mathf.Clamp01(Mathf.Abs(data.z));
+
+    public void OnPaddleLeftInput(AxisData data)
+        => sensorInputValues[1] = Mathf.Clamp01(Mathf.Abs(data.z));
+
     void Start()
     {
         for(int i=0;i<boat.Length;i++) boat[i].action.Enable();
     }
-    
+
     void FixedUpdate()
     {
         for(int i=0;i<wheels.Length;i++)
         {
-            float input = boat[i].action.ReadValue<float>();
+            float input = (i < sensorInputValues.Length && sensorInputValues[i] > 0f)
+                ? sensorInputValues[i]
+                : boat[i].action.ReadValue<float>();
 
             if(input >= driveValueThreshold)
             {

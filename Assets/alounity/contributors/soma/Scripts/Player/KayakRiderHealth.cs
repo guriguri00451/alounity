@@ -8,7 +8,6 @@ using FishRumble;
 public class KayakRiderHealth : MonoBehaviour, IDamageable
 {
     [SerializeField] private int maxHp = 100;
-    [SerializeField] private Transform respawnPoint;
     private Rigidbody rb;
     private int playerID;
     public int PlayerID
@@ -53,7 +52,5 @@ public class KayakRiderHealth : MonoBehaviour, IDamageable
     public void Respawn()
     {
         currentHp = maxHp;
-        if (respawnPoint != null)
-            transform.SetPositionAndRotation(respawnPoint.position, respawnPoint.rotation);
     }
 }

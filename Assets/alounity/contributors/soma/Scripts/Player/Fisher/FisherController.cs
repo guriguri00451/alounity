@@ -39,6 +39,10 @@ public class FisherController : MonoBehaviour
     [SerializeField] private float bigAttackPowerThresholdValue;
     [SerializeField] private int swingFinishTimeMs = 1200;
     [SerializeField] private float swingCoolTime = 3f;
+    [Header("Sensor Thresholds")]
+    [SerializeField] float castThreshold = 1.5f;
+    [SerializeField] float reelThreshold = 1.5f;
+    [SerializeField] float shakeThreshold = 2.0f;
     private int playerID;
     public int PlayerID
     {
@@ -125,10 +129,24 @@ public class FisherController : MonoBehaviour
         }
     }
 
+    void Cast(InputAction.CallbackContext _) => ExecuteCast();
+
+    void Reel(InputAction.CallbackContext _) => ExecuteReel();
+
+    /// <summary>
+    /// スマホを振る動作に対応する入力コールバック。
+    /// Swinging 中は振り回し攻撃を行う。
+    /// </summary>
+    void Shake(InputAction.CallbackContext ctx)
+    {
+        if (currentState == FisherState.Swinging)
+            SwingAttack(ctx.ReadValue<float>());
+    }
+
     /// <summary>
     /// Idle 状態のときにキャストする。針を切り離して前方に投げ、Waiting へ遷移する。
     /// </summary>
-    void Cast(InputAction.CallbackContext context)
+    void ExecuteCast()
     {
         Debug.Log("投げる");
         if (currentState != FisherState.Idle) return;
@@ -140,44 +158,47 @@ public class FisherController : MonoBehaviour
         hookRigidbody.AddForce(castVector.normalized * castPower, ForceMode.Impulse);
     }
 
-    void Reel(InputAction.CallbackContext context)
+    void ExecuteReel()
     {
-        if (currentState == FisherState.Waiting || currentState == FisherState.Swinging) 
+        if (currentState == FisherState.Waiting || currentState == FisherState.Swinging)
         {
             Debug.Log("引きつける");
-
-            if(isAbleCatch)
-            {
+            if (isAbleCatch)
                 ManageState(FisherState.Swinging);
-            }
             else
-            {
                 ManageState(FisherState.Idle);
-            }
         }
     }
 
     /// <summary>
-    /// スマホを振る動作に対応する入力コールバック。
-    /// Swinging 中は振り回し攻撃を行う。
+    /// SensorDataReceiverから呼ばれる。加速度をジェスチャー判定してCast/Reel/Shakeに変換する。
     /// </summary>
-    void Shake(InputAction.CallbackContext input)
+    public void OnSensorInput(SensorDataPayload data)
     {
-        if (currentState == FisherState.Swinging)
-            SwingAttack(input);
+        if (data.accel == null) return;
+        float z = data.accel.z;
+        float magnitude = Mathf.Sqrt(
+            data.accel.x * data.accel.x +
+            data.accel.y * data.accel.y +
+            data.accel.z * data.accel.z);
+
+        if (z > castThreshold)
+            ExecuteCast();
+        else if (z < -reelThreshold)
+            ExecuteReel();
+        else if (magnitude > shakeThreshold && currentState == FisherState.Swinging)
+            SwingAttack(magnitude);
     }
 
 
     /// <summary>
     /// 振り回し攻撃。Shakeするたびに糸を縮め、minLineLengthまで巻き取ったらIdleに戻る。
     /// </summary>
-    async void SwingAttack(InputAction.CallbackContext _input)
+    async void SwingAttack(float inputValue)
     {
         if(isSwinging || SwingCoolTimer()) return;
 
-        Debug.Log("Swing");
         isSwinging = true;
-        float inputValue = _input.ReadValue<float>();
         if(bigAttackPowerThresholdValue < inputValue)
         {
             springJointConfig.GetFromAttack(2).ApplyTo(lineSpringJoint);
