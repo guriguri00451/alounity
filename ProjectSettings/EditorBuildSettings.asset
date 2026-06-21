@@ -5,9 +5,24 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/alounity/contributors/rita/Scenes/versus_SocketTest.unity
     guid: 0adaec70af8aa4f85854405c63335b5e
+  - enabled: 1
+    path: Assets/alounity/Scenes/Title.unity
+    guid: b54ddf81ccf127e49bc630573b1bb47c
+  - enabled: 1
+    path: Assets/alounity/Scenes/Select.unity
+    guid: 2fed2740949ae8e4e8f61aa8ebfe4658
+  - enabled: 1
+    path: Assets/alounity/Scenes/Single.unity
+    guid: 11432538d9b6041fab9e5e193d3333a2
+  - enabled: 1
+    path: Assets/alounity/Scenes/Versus.unity
+    guid: 6786b6cd9f90e45d8bebb6739a382591
+  - enabled: 1
+    path: Assets/alounity/Scenes/Result.unity
+    guid: 039e4356f25a04d4eb9b436359485164
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
