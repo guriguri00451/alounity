@@ -25,7 +25,7 @@ public class PlayerManager: MonoBehaviour
     [SerializeField] FisherController fisherController;
     [SerializeField] BoatController boatController;
     [SerializeField] PlayerState currentState;
-
+    public Action<int, int> onDamage; 
     public Action<int> onDeath;
 
     SensorDataReceiver boundReceiver;
@@ -37,6 +37,7 @@ public class PlayerManager: MonoBehaviour
         boatController.PlayerID = playerID;
 
         riderHealth.onDead += DeadPlayer;
+        riderHealth.onDamaged += Damaged;
 
         riderHealth.Respawn();
     }
@@ -48,6 +49,11 @@ public class PlayerManager: MonoBehaviour
 
         riderHealth.onDead -= DeadPlayer;
         onDeath?.Invoke(playerID);
+    }
+
+    void Damaged(int damage)
+    {
+        onDamage?.Invoke(damage,playerID);
     }
 
     /// <summary>

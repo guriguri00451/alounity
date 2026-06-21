@@ -156,9 +156,9 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
-  m_Size: {x: 1, y: 0.2, z: 4}
+  m_Size: {x: 1, y: 0.02, z: 4}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &299783177436670171
 GameObject:
@@ -1171,14 +1171,14 @@ MonoBehaviour:
   currentState: 0
   castPower: 200
   CatchRequiredShakeCount: 12
-  fishAcceraratePower: 500
-  smallAttackPowerThresholdValue: 0.3
-  middleAttackPowerThresholdValue: 0.6
-  bigAttackPowerThresholdValue: 0.7
-  swingFinishTimeMs: 1200
-  swingCoolTime: 3
-  castThreshold: 1.5
-  reelThreshold: 1.5
+  fishAcceraratePower: 1000
+  smallAttackPowerThresholdValue: 100
+  middleAttackPowerThresholdValue: 300
+  bigAttackPowerThresholdValue: 400
+  swingFinishTimeMs: 2500
+  swingCoolTime: 0.1
+  castThreshold: 300
+  reelThreshold: 230
   shakeThreshold: 2
 --- !u!1 &3558500417900078302
 GameObject:
@@ -1702,7 +1702,7 @@ MonoBehaviour:
   - {fileID: 3505946411931753229}
   driveValueThreshold: 0.8
   breakValueThreshold: 0.2
-  power: 30
+  power: 10
   breakPower: 30
 --- !u!114 &3490314340113387564
 MonoBehaviour:
