@@ -21,7 +21,7 @@ public class ResultManager: MonoBehaviour
         }
     }
 
-    void Updagte()
+    void Update()
     {
         if(Input.GetKey(KeyCode.Space))
         {
