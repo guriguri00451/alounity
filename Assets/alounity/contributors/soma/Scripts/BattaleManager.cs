@@ -41,6 +41,7 @@ namespace FishRumble
         async UniTask EnterSettingsScreen()
         {
             await UniTask.WaitUntil(() => Input.GetKey(KeyCode.Space));
+            Debug.Log("<Color=red>tomato</Color>");
             QRPanel.SetActive(false);
         }
 
