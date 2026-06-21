@@ -11,6 +11,7 @@ namespace FishRumble
     public class BattleManager : MonoBehaviour
     {
         [Header("準備パラメータ")]
+        [SerializeField] VersusUIController uIController;
         [SerializeField] GameObject QRPanel;
         [SerializeField] GameObject[] playerLocations;
         [SerializeField] GameObject playerPrefab;
@@ -40,6 +41,7 @@ namespace FishRumble
 
         async UniTask EnterSettingsScreen()
         {
+            await UniTask.Delay(2000);
             await UniTask.WaitUntil(() => Input.GetKey(KeyCode.Space));
             QRPanel.SetActive(false);
         }
@@ -64,6 +66,7 @@ namespace FishRumble
                 CheckGameMatch(playerID);
                 return;
             }
+            uIController.SetLivesCount(playerID,playersLives[playerID]);
             await DeadCoolTime();
             RespawnPlayer(playerID);
         }
@@ -118,6 +121,11 @@ namespace FishRumble
             SceneManager.LoadScene(SceneName.Result.ToString());
         }
 
+
+        void DamagedPlayer(int damage, int playerID)
+        {
+            uIController.SetHPBar(playerID ,damage);
+        }
         
     }
 }

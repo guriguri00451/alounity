@@ -114,10 +114,11 @@ public class FisherController : MonoBehaviour
         switch (newState)
         {
             case FisherState.Idle:
-                hookRigidbody.linearVelocity = Vector3.zero;
-                hookRigidbody.angularVelocity = Vector3.zero;
+                hookRigidbody.isKinematic = true;
+                hookTransform.transform.position = Vector3.zero;
                 break;
             case FisherState.Waiting:
+                hookRigidbody.isKinematic = false;
                 _hook.Release();
                 break;
             case FisherState.Swinging:
@@ -176,18 +177,21 @@ public class FisherController : MonoBehaviour
     public void OnSensorInput(SensorDataPayload data)
     {
         if (data.accel == null) return;
-        float z = data.accel.z;
-        float magnitude = Mathf.Sqrt(
-            data.accel.x * data.accel.x +
-            data.accel.y * data.accel.y +
-            data.accel.z * data.accel.z);
 
-        if (z > castThreshold)
-            ExecuteCast();
-        else if (z < -reelThreshold)
+        //rotationの値に応じて釣り竿を振る
+        float force = data.rotation.alpha;
+        if (force > castThreshold)
             ExecuteReel();
-        else if (magnitude > shakeThreshold && currentState == FisherState.Swinging)
-            SwingAttack(magnitude);
+        else if (force < -reelThreshold)
+        {
+            if(currentState == FisherState.Swinging)
+            {
+                SwingAttack(force);
+                return;
+            }
+            ExecuteCast();
+        }
+
     }
 
 
@@ -278,7 +282,7 @@ public class FisherController : MonoBehaviour
     {
         if(caughtFish != null) 
         {
-            
+
             caughtFish.onDepleted -= DropFish;
             caughtFish.SetAttackActive(false);
             caughtFish = null;

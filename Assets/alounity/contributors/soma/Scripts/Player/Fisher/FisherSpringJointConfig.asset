@@ -20,21 +20,21 @@ MonoBehaviour:
     tolerance: 0.005
     enableCollision: 0
   waiting:
-    spring: 10
+    spring: 300
     damper: 0.2
     minDistance: 0
-    maxDistance: 30
+    maxDistance: 20
     tolerance: 0.025
     enableCollision: 0
   catching:
-    spring: 500
+    spring: 300
     damper: 0.5
     minDistance: 0
     maxDistance: 10
     tolerance: 0.025
     enableCollision: 0
   swinging:
-    spring: 500
+    spring: 20
     damper: 2
     minDistance: 0
     maxDistance: 5
@@ -44,20 +44,20 @@ MonoBehaviour:
     spring: 1
     damper: 0.2
     minDistance: 0
-    maxDistance: 3
+    maxDistance: 10
     tolerance: 0.025
     enableCollision: 0
   middleAtack:
     spring: 1
     damper: 0.2
     minDistance: 0
-    maxDistance: 6
+    maxDistance: 15
     tolerance: 0.025
     enableCollision: 0
   bigAtack:
     spring: 1
     damper: 0.2
     minDistance: 0
-    maxDistance: 10
+    maxDistance: 25
     tolerance: 0.025
     enableCollision: 0

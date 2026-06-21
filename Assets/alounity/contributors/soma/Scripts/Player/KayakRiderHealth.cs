@@ -25,6 +25,7 @@ public class KayakRiderHealth : MonoBehaviour, IDamageable
     private int currentHp;
 
     public bool IsDead => currentHp <= 0;
+    public Action<int> onDamaged;
 
     /// <summary>HPが0になったときに発火するイベント。GameManager等が購読してリスポーンを呼ぶ。</summary>
     public event Action onDead;
@@ -41,6 +42,7 @@ public class KayakRiderHealth : MonoBehaviour, IDamageable
 
         if (IsDead) return;
         currentHp = Mathf.Max(0, currentHp - damage);
+        onDamaged?.Invoke(currentHp);
         Debug.Log($"[KayakRider] ダメージ {damage} 受けた。残りHP: {currentHp}/{maxHp}");
         if (IsDead)
             onDead?.Invoke();
