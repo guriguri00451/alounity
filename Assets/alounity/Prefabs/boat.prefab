@@ -1702,8 +1702,8 @@ MonoBehaviour:
   - {fileID: 3505946411931753229}
   driveValueThreshold: 0.8
   breakValueThreshold: 0.2
-  power: 10
-  breakPower: 30
+  power: 0.3
+  breakPower: 1
 --- !u!114 &3490314340113387564
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -32,10 +32,11 @@ public class BoatController : MonoBehaviour
     float[] sensorInputValues = new float[2];
 
     public void OnPaddleRightInput(AxisData data)
-        => sensorInputValues[0] = Mathf.Clamp01(Mathf.Abs(data.z));
+        => sensorInputValues[0] = Mathf.Sqrt(data.x * data.x + data.y * data.y + data.z * data.z);
+        
 
     public void OnPaddleLeftInput(AxisData data)
-        => sensorInputValues[1] = Mathf.Clamp01(Mathf.Abs(data.z));
+        => sensorInputValues[1] = Mathf.Sqrt(data.x * data.x + data.y * data.y + data.z * data.z);
 
     void Start()
     {
