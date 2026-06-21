@@ -13,6 +13,5 @@ public class WaveSpeedController : MonoBehaviour
         float speed= rb.linearVelocity.magnitude;
         if(speed < stopEffectSpeed) speed = 0;
         waveEffect.SetFloat("Speed",speed);
-        Debug.Log(speed);
     }
 }

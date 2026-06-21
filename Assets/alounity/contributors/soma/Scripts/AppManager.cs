@@ -8,7 +8,7 @@ public class AppManager : MonoBehaviour
     public static AppManager Instance;
     
     // [SerializeField] TitleManager titleManager;
-    [SerializeField] BattleManager battleManager;
+    public BattleManager battleManager;
     public int playerCount;
     public PlayerData[] resultPlayersData;
     public int winnerPlayerID;
@@ -26,8 +26,5 @@ public class AppManager : MonoBehaviour
         }
     }
 
-    public void StartBattle()
-    {
-        SceneManager.LoadScene(SceneName.Field.ToString());
-    } 
+
 }

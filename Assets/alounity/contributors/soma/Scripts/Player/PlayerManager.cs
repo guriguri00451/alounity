@@ -28,40 +28,62 @@ public class PlayerManager: MonoBehaviour
 
     public Action<int> onDeath;
 
-    void Awake()
-    {
-        Init();
-    }
+    SensorDataReceiver boundReceiver;
 
-    void Init()
+    public void Init()
     {
         riderHealth.PlayerID = playerID;
         fisherController.PlayerID = playerID;
         boatController.PlayerID = playerID;
 
         riderHealth.onDead += DeadPlayer;
-    }
 
-    void ManageState(PlayerState newState)
-    {
-        currentState = newState;
-
-        switch (currentState)
-        {
-            case PlayerState.Readey:
-                break;
-            case PlayerState.Fighting:
-                break;
-            case PlayerState.Dead:
-                break;
-            case PlayerState.Respawning:
-                break;
-        }
+        riderHealth.Respawn();
     }
 
     void DeadPlayer()
     {
         riderHealth.onDead -= DeadPlayer;
         onDeath?.Invoke(playerID);
+    }
+
+    /// <summary>
+    /// スポーン・リスポーン後にBattleManagerから呼ぶ。PlayerIDに基づくチームのイベントを登録する。
+    /// </summary>
+    public void BindSensorInput(SensorDataReceiver receiver)
+    {
+        UnbindSensorInput();
+        boundReceiver = receiver;
+
+        bool isTeamA = playerID == 0;
+        if (isTeamA)
+        {
+            receiver.onPaddleRightInput_A.AddListener(boatController.OnPaddleRightInput);
+            receiver.onPaddleLeftInput_A.AddListener(boatController.OnPaddleLeftInput);
+            receiver.onFisherInput_A.AddListener(fisherController.OnSensorInput);
+        }
+        else
+        {
+            receiver.onPaddleRightInput_B.AddListener(boatController.OnPaddleRightInput);
+            receiver.onPaddleLeftInput_B.AddListener(boatController.OnPaddleLeftInput);
+            receiver.onFisherInput_B.AddListener(fisherController.OnSensorInput);
+        }
+    }
+
+    void UnbindSensorInput()
+    {
+        if (boundReceiver == null) return;
+        boundReceiver.onPaddleRightInput_A.RemoveListener(boatController.OnPaddleRightInput);
+        boundReceiver.onPaddleLeftInput_A.RemoveListener(boatController.OnPaddleLeftInput);
+        boundReceiver.onFisherInput_A.RemoveListener(fisherController.OnSensorInput);
+        boundReceiver.onPaddleRightInput_B.RemoveListener(boatController.OnPaddleRightInput);
+        boundReceiver.onPaddleLeftInput_B.RemoveListener(boatController.OnPaddleLeftInput);
+        boundReceiver.onFisherInput_B.RemoveListener(fisherController.OnSensorInput);
+        boundReceiver = null;
+    }
+
+    void OnDestroy()
+    {
+        UnbindSensorInput();
     }
 }

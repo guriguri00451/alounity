@@ -53,16 +53,14 @@ namespace FishRumble
         /// </summary>
         public void SetAttackActive(bool value) => isAttackActive = value;
 
-        /// <summary>
-        /// OnTriggerEnter is called when the Collider other enters the trigger.
-        /// </summary>
-        /// <param name="other">The other Collider involved in this other.</param>
         void OnTriggerEnter(Collider other)
         {
             if (!isAttackActive) return;
 
             bool hitPlayer = other.gameObject.CompareTag("KayakRider");
             bool hitObstacle = other.gameObject.CompareTag("Obstacle");
+
+            Debug.Log(other.gameObject.CompareTag("KayakRider"));
 
             if (!hitPlayer && !hitObstacle) return;
 
