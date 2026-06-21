@@ -105,5 +105,4 @@ npm run build      # プロダクションビルド
 - [アーキテクチャ](docs/03_Architecture.md)
 - [クラス図](docs/04_ClassDiagram.md)
 - [コントローラー仕様書](docs/controller-implementation-plan.md)
-- [ルーム管理](docs/room-management-plan.md)
 - [QRコード実装](docs/qr-code-implementation.md)
