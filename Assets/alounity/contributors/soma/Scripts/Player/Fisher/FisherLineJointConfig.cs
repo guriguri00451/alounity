@@ -3,36 +3,36 @@ using FishRumble;
 using Unity.VisualScripting;
 
 /// <summary>
-/// FisherStateごとのSpringJoint設定を一括管理するScriptableObject。
+/// FisherStateごとのConfigurableJoint設定を一括管理するScriptableObject。
 /// </summary>
 [CreateAssetMenu(fileName = "FisherSpringJointConfig", menuName = "Fisher/SpringJoint Config")]
-public class FisherSpringJointConfig : ScriptableObject
+public class FisherLineJointConfig : ScriptableObject
 {
     [Header("Idle: 竿先にぶら下がってぷらぷらする状態")]
-    public SpringJointSettings idle;
+    public LineJointSettings idle;
 
     [Header("Waiting: 魚がかかるのを待つ状態")]
-    public SpringJointSettings waiting;
+    public LineJointSettings waiting;
 
     [Header("Catching: 魚がかかった状態")]
-    public SpringJointSettings catching;
+    public LineJointSettings catching;
 
     [Header("Swinging: 魚をぶん回している状態")]
-    public SpringJointSettings swinging;
+    public LineJointSettings swinging;
 
     [Header("SmallAttack: 小攻撃")]
-    public SpringJointSettings smallAtack;
+    public LineJointSettings smallAtack;
     [Header("MiddleAttack: 中攻撃")]
-    public SpringJointSettings middleAtack;
+    public LineJointSettings middleAtack;
 
-    [Header("SmallAttack: 大攻撃")]
-    public SpringJointSettings bigAtack;
+    [Header("BigAttack: 大攻撃")]
+    public LineJointSettings bigAtack;
 
 
     /// <summary>
     /// 指定したStateに対応する設定を返す。
     /// </summary>
-    public SpringJointSettings GetFromState(FisherState state) => state switch
+    public LineJointSettings GetFromState(FisherState state) => state switch
     {
         FisherState.Idle => idle,
         FisherState.Waiting => waiting,
@@ -43,7 +43,7 @@ public class FisherSpringJointConfig : ScriptableObject
     /// <summary>
     /// 指定したAttackに対応する設定を返す。
     /// </summary>
-    public SpringJointSettings GetFromAttack(int i) => i switch
+    public LineJointSettings GetFromAttack(int i) => i switch
     {
         0 => smallAtack,
         1 => middleAtack,

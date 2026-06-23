@@ -13,51 +13,30 @@ MonoBehaviour:
   m_Name: FisherSpringJointConfig
   m_EditorClassIdentifier: Assembly-CSharp::FisherSpringJointConfig
   idle:
-    spring: 500
-    damper: 2
-    minDistance: 0
     maxDistance: 0.05
-    tolerance: 0.005
+    contactDistance: 0.01
     enableCollision: 0
   waiting:
-    spring: 300
-    damper: 0.2
-    minDistance: 0
     maxDistance: 20
-    tolerance: 0.025
+    contactDistance: 0.01
     enableCollision: 0
   catching:
-    spring: 300
-    damper: 0.5
-    minDistance: 0
     maxDistance: 10
-    tolerance: 0.025
+    contactDistance: 0.01
     enableCollision: 0
   swinging:
-    spring: 20
-    damper: 2
-    minDistance: 0
     maxDistance: 5
-    tolerance: 0.025
+    contactDistance: 0.01
     enableCollision: 1
   smallAtack:
-    spring: 1
-    damper: 0.2
-    minDistance: 0
     maxDistance: 10
-    tolerance: 0.025
+    contactDistance: 0.01
     enableCollision: 0
   middleAtack:
-    spring: 1
-    damper: 0.2
-    minDistance: 0
     maxDistance: 15
-    tolerance: 0.025
+    contactDistance: 0.01
     enableCollision: 0
   bigAtack:
-    spring: 1
-    damper: 0.2
-    minDistance: 0
     maxDistance: 25
-    tolerance: 0.025
+    contactDistance: 0.01
     enableCollision: 0

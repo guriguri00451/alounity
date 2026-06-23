@@ -1224,7 +1224,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FisherControler
   rodTransform: {fileID: 8134439847733063113}
   hookTransform: {fileID: 3928955134559530124}
-  lineSpringJoint: {fileID: 7421196942546889635}
+  lineJoint: {fileID: 8528512916380128890}
   springJointConfig: {fileID: 11400000, guid: 3637ec06e3f8f4414a102ba8c3a606b0, type: 2}
   horizontalInput: 0
   fishSettings: {fileID: 11400000, guid: 8e02caf576c184a2797cb6d6ec868d89, type: 2}
@@ -1605,7 +1605,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   hitEffect: {fileID: 3725268143255017759}
   deadEffect: {fileID: 4633839210909185518}
-  spawnPoints: []
+  spawnPoints:
+  - {fileID: 1749372963434855568}
+  - {fileID: 8798728455288220320}
+  - {fileID: 5838809871241061789}
+  - {fileID: 5953394654004470765}
 --- !u!2083052967 &3725268143255017759
 VisualEffect:
   m_ObjectHideFlags: 0
@@ -2402,7 +2406,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4906490513593294807}
   - component: {fileID: 8063920661955736878}
-  - component: {fileID: 7421196942546889635}
+  - component: {fileID: 8528512916380128890}
   m_Layer: 0
   m_Name: LinePoint
   m_TagString: Untagged
@@ -2452,8 +2456,8 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!145 &7421196942546889635
-SpringJoint:
+--- !u!153 &8528512916380128890
+ConfigurableJoint:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2463,19 +2467,97 @@ SpringJoint:
   m_ConnectedBody: {fileID: 1720365032329271256}
   m_ConnectedArticulationBody: {fileID: 0}
   m_Anchor: {x: 0, y: 0, z: 0}
+  m_Axis: {x: 1, y: 0, z: 0}
   m_AutoConfigureConnectedAnchor: 1
   m_ConnectedAnchor: {x: 0, y: 0, z: 0}
-  m_Spring: 10
-  m_Damper: 0.2
-  m_MinDistance: 0
-  m_MaxDistance: 10
-  m_Tolerance: 0.025
+  m_SecondaryAxis: {x: 0, y: 1, z: 0}
+  m_XMotion: 1
+  m_YMotion: 1
+  m_ZMotion: 1
+  m_AngularXMotion: 2
+  m_AngularYMotion: 2
+  m_AngularZMotion: 2
+  m_LinearLimitSpring:
+    spring: 0
+    damper: 0
+  m_LinearLimit:
+    limit: 10
+    bounciness: 0
+    contactDistance: 0
+  m_AngularXLimitSpring:
+    spring: 0
+    damper: 0
+  m_LowAngularXLimit:
+    limit: 0
+    bounciness: 0
+    contactDistance: 0
+  m_HighAngularXLimit:
+    limit: 0
+    bounciness: 0
+    contactDistance: 0
+  m_AngularYZLimitSpring:
+    spring: 0
+    damper: 0
+  m_AngularYLimit:
+    limit: 0
+    bounciness: 0
+    contactDistance: 0
+  m_AngularZLimit:
+    limit: 0
+    bounciness: 0
+    contactDistance: 0
+  m_TargetPosition: {x: 0, y: 0, z: 0}
+  m_TargetVelocity: {x: 0, y: 0, z: 0}
+  m_XDrive:
+    serializedVersion: 4
+    positionSpring: 0
+    positionDamper: 0
+    maximumForce: 3.4028233e+38
+    useAcceleration: 0
+  m_YDrive:
+    serializedVersion: 4
+    positionSpring: 0
+    positionDamper: 0
+    maximumForce: 3.4028233e+38
+    useAcceleration: 0
+  m_ZDrive:
+    serializedVersion: 4
+    positionSpring: 0
+    positionDamper: 0
+    maximumForce: 3.4028233e+38
+    useAcceleration: 0
+  m_TargetRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_TargetAngularVelocity: {x: 0, y: 0, z: 0}
+  m_RotationDriveMode: 0
+  m_AngularXDrive:
+    serializedVersion: 4
+    positionSpring: 0
+    positionDamper: 0
+    maximumForce: 3.4028233e+38
+    useAcceleration: 0
+  m_AngularYZDrive:
+    serializedVersion: 4
+    positionSpring: 0
+    positionDamper: 0
+    maximumForce: 3.4028233e+38
+    useAcceleration: 0
+  m_SlerpDrive:
+    serializedVersion: 4
+    positionSpring: 0
+    positionDamper: 0
+    maximumForce: 3.4028233e+38
+    useAcceleration: 0
+  m_ProjectionMode: 0
+  m_ProjectionDistance: 0.1
+  m_ProjectionAngle: 180
+  m_ConfiguredInWorldSpace: 0
+  m_SwapBodies: 0
   m_BreakForce: Infinity
   m_BreakTorque: Infinity
   m_EnableCollision: 0
   m_EnablePreprocessing: 1
   m_MassScale: 1
-  m_ConnectedMassScale: 20
+  m_ConnectedMassScale: 1
 --- !u!1 &7159733704044230025
 GameObject:
   m_ObjectHideFlags: 0
