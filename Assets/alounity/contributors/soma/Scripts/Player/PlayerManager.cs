@@ -25,6 +25,7 @@ public class PlayerManager: MonoBehaviour
     [SerializeField] FisherController fisherController;
     [SerializeField] BoatController boatController;
     [SerializeField] PlayerState currentState;
+    [SerializeField] PlayerEffectMaker effectMaker;
     public Action<int, int> onDamage; 
     public Action<int> onDeath;
 
@@ -46,6 +47,7 @@ public class PlayerManager: MonoBehaviour
     {
         fisherController.DropFish();
         boatController.FixBoat();
+        effectMaker.makeDeadEffect();
 
         riderHealth.onDead -= DeadPlayer;
         onDeath?.Invoke(playerID);
@@ -53,6 +55,7 @@ public class PlayerManager: MonoBehaviour
 
     void Damaged(int damage)
     {
+        effectMaker.makeHitEffect();
         onDamage?.Invoke(damage,playerID);
     }
 
