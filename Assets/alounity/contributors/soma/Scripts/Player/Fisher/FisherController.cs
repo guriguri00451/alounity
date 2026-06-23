@@ -16,8 +16,8 @@ public class FisherController : MonoBehaviour
     [SerializeField] private Transform rodTransform;
     [SerializeField] private Transform hookTransform;
     private Rigidbody hookRigidbody;
-    [SerializeField] private SpringJoint lineSpringJoint;
-    [SerializeField] private FisherSpringJointConfig springJointConfig;
+    [SerializeField] private ConfigurableJoint lineJoint;
+    [SerializeField] private FisherLineJointConfig jointConfig;
     [Header("ControlValues")]
     [Range(-1, 1)]
     [SerializeField] private float horizontalInput;
@@ -109,7 +109,7 @@ public class FisherController : MonoBehaviour
         Debug.Log($"State changed: {currentState} -> {newState}");
         currentState = newState;
 
-        springJointConfig.GetFromState(currentState).ApplyTo(lineSpringJoint);
+        jointConfig.GetFromState(currentState).ApplyTo(lineJoint);
 
         switch (newState)
         {
@@ -204,17 +204,17 @@ public class FisherController : MonoBehaviour
         isSwinging = true;
         if(bigAttackPowerThresholdValue < inputValue)
         {
-            springJointConfig.GetFromAttack(2).ApplyTo(lineSpringJoint);
+            jointConfig.GetFromAttack(2).ApplyTo(lineJoint);
         }
         else
         if(middleAttackPowerThresholdValue < inputValue)
         {
-            springJointConfig.GetFromAttack(1).ApplyTo(lineSpringJoint);
+            jointConfig.GetFromAttack(1).ApplyTo(lineJoint);
         }
         else
         if(smallAttackPowerThresholdValue < inputValue)
         {
-            springJointConfig.GetFromAttack(0).ApplyTo(lineSpringJoint);
+            jointConfig.GetFromAttack(0).ApplyTo(lineJoint);
         }
 
         //Hookの加速
@@ -234,7 +234,7 @@ public class FisherController : MonoBehaviour
         await UniTask.Delay(swingFinishTimeMs);
 
         //元の長さに戻す
-        springJointConfig.GetFromState(FisherState.Swinging).ApplyTo(lineSpringJoint);
+        jointConfig.GetFromState(FisherState.Swinging).ApplyTo(lineJoint);
         hookRigidbody.isKinematic = true;
         hookRigidbody.isKinematic = false;
         isSwinging = false;
