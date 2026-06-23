@@ -48,7 +48,7 @@ namespace FishRumble
         /// </summary>
         public void TakeDamage(int damage = 1)
         {
-            currentDurability = Mathf.Max(0, currentDurability - damage);
+            currentDurability = Mathf.Max(0, currentDurability - 2);
         }
 
         /// <summary>

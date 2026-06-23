@@ -115,10 +115,9 @@ public class FisherController : MonoBehaviour
         {
             case FisherState.Idle:
                 hookRigidbody.isKinematic = true;
-                hookTransform.transform.position = Vector3.zero;
+                hookRigidbody.isKinematic = false;
                 break;
             case FisherState.Waiting:
-                hookRigidbody.isKinematic = false;
                 _hook.Release();
                 break;
             case FisherState.Swinging:

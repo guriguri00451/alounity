@@ -156,9 +156,9 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 0.02, z: 4}
+  m_Size: {x: 1, y: 0.2, z: 4}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &299783177436670171
 GameObject:
@@ -870,7 +870,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 3
 --- !u!114 &5683864014274677544
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1587,7 +1587,7 @@ Rigidbody:
   m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 3
 --- !u!1 &4914578745326805036
 GameObject:
   m_ObjectHideFlags: 0
@@ -1702,8 +1702,8 @@ MonoBehaviour:
   - {fileID: 3505946411931753229}
   driveValueThreshold: 0.8
   breakValueThreshold: 0.2
-  power: 0.3
-  breakPower: 1
+  power: 1
+  breakPower: 0.7
 --- !u!114 &3490314340113387564
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3151,6 +3151,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: RagDoll
       objectReference: {fileID: 0}
+    - target: {fileID: 2641935162348928218, guid: ef749531f52444e768b2e5a809afaf4a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3889907079358075605, guid: ef749531f52444e768b2e5a809afaf4a, type: 3}
       propertyPath: m_ConnectedBody
       value: 
@@ -3231,6 +3235,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ragdoll (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 2641935162348928218, guid: ef749531f52444e768b2e5a809afaf4a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3302,6 +3310,10 @@ PrefabInstance:
     - target: {fileID: 2641935162348928218, guid: ef749531f52444e768b2e5a809afaf4a, type: 3}
       propertyPath: m_Name
       value: Ragdoll
+      objectReference: {fileID: 0}
+    - target: {fileID: 2641935162348928218, guid: ef749531f52444e768b2e5a809afaf4a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
