@@ -1443,9 +1443,6 @@ GameObject:
   - component: {fileID: 2681066236791206104}
   - component: {fileID: 5298795356587936397}
   - component: {fileID: 8875973223554619475}
-  - component: {fileID: 3458807768579128952}
-  - component: {fileID: 7085941026513980007}
-  - component: {fileID: 4403822428816032955}
   m_Layer: 0
   m_Name: body (1)
   m_TagString: KayakRider
@@ -1527,67 +1524,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &3458807768579128952
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3876864972879834855}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 0.8, z: 6}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &7085941026513980007
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3876864972879834855}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7bb7e2865213344f090c298565df2f09, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::KayakRiderHealth
-  maxHp: 10
---- !u!54 &4403822428816032955
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3876864972879834855}
-  serializedVersion: 5
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 3
 --- !u!1 &4914578745326805036
 GameObject:
   m_ObjectHideFlags: 0
@@ -1600,6 +1536,8 @@ GameObject:
   - component: {fileID: 2304890924713164550}
   - component: {fileID: 5618928803710907097}
   - component: {fileID: 3490314340113387564}
+  - component: {fileID: 8093168848251489421}
+  - component: {fileID: 2955323629015435181}
   m_Layer: 0
   m_Name: boat
   m_TagString: Untagged
@@ -1657,7 +1595,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 1
   m_Constraints: 80
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!114 &5618928803710907097
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1702,8 +1640,8 @@ MonoBehaviour:
   - {fileID: 3505946411931753229}
   driveValueThreshold: 0.8
   breakValueThreshold: 0.2
-  power: 1
-  breakPower: 0.7
+  power: 30
+  breakPower: 25
 --- !u!114 &3490314340113387564
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1717,10 +1655,44 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerManager
   playerData: {fileID: 0}
-  riderHealth: {fileID: 7085941026513980007}
+  riderHealth: {fileID: 0}
   fisherController: {fileID: 2085352290531332958}
   boatController: {fileID: 5618928803710907097}
   currentState: 0
+--- !u!65 &8093168848251489421
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4914578745326805036}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 0.8, z: 6}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2955323629015435181
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4914578745326805036}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bb7e2865213344f090c298565df2f09, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::KayakRiderHealth
+  maxHp: 10
 --- !u!1 &6181435908484529296
 GameObject:
   m_ObjectHideFlags: 0
