@@ -1225,7 +1225,7 @@ MonoBehaviour:
   rodTransform: {fileID: 8134439847733063113}
   hookTransform: {fileID: 3928955134559530124}
   lineJoint: {fileID: 8528512916380128890}
-  springJointConfig: {fileID: 11400000, guid: 3637ec06e3f8f4414a102ba8c3a606b0, type: 2}
+  jointConfig: {fileID: 11400000, guid: 3637ec06e3f8f4414a102ba8c3a606b0, type: 2}
   horizontalInput: 0
   fishSettings: {fileID: 11400000, guid: 8e02caf576c184a2797cb6d6ec868d89, type: 2}
   isDebugMode: 1

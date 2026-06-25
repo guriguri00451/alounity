@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6018332398281251068}
   - component: {fileID: 3745568097270590828}
   - component: {fileID: 1724781763606486361}
+  - component: {fileID: 7319603659629192636}
   m_Layer: 0
   m_Name: rock (1)
   m_TagString: Untagged
@@ -90,6 +91,28 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &7319603659629192636
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 546892039903412799}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4199401309831131938, guid: 7628ced1a9d644c428abdfb35aaeba84, type: 3}
 --- !u!1 &3467995200654453113
 GameObject:
   m_ObjectHideFlags: 0
@@ -101,7 +124,6 @@ GameObject:
   - component: {fileID: 6023193701525028810}
   - component: {fileID: 6199295369996904082}
   - component: {fileID: 6117575640919597403}
-  - component: {fileID: 2792482451670878111}
   - component: {fileID: 4170384955996602236}
   m_Layer: 0
   m_Name: rock
@@ -183,28 +205,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &2792482451670878111
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3467995200654453113}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 4199401309831131938, guid: 7628ced1a9d644c428abdfb35aaeba84, type: 3}
 --- !u!54 &4170384955996602236
 Rigidbody:
   m_ObjectHideFlags: 0

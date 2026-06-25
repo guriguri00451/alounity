@@ -25,18 +25,18 @@ MonoBehaviour:
     contactDistance: 0.01
     enableCollision: 0
   swinging:
-    maxDistance: 5
+    maxDistance: 10
     contactDistance: 0.01
     enableCollision: 1
   smallAtack:
-    maxDistance: 10
+    maxDistance: 25
     contactDistance: 0.01
     enableCollision: 0
   middleAtack:
-    maxDistance: 15
+    maxDistance: 40
     contactDistance: 0.01
     enableCollision: 0
   bigAtack:
-    maxDistance: 25
+    maxDistance: 50
     contactDistance: 0.01
     enableCollision: 0
